@@ -1,0 +1,224 @@
+* {
+  box-sizing: border-box;
+}
+
+.loginPage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1440px;
+  height: 1024px;
+  overflow: hidden;
+  background: linear-gradient(135.85deg, #f9ed32 4.79%, #d9bd32 54.4%);
+}
+
+.blobsVector {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 1024px;
+}
+
+.blobsVector2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 1024px;
+}
+
+.blobsVector3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 1024px;
+}
+
+.mainImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1440px;
+  height: 1024px;
+  object-fit: cover;
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+}
+
+.title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 29px;
+  text-align: center;
+  color: #000000;
+  margin: 0 0 30px 0;
+}
+
+.fullNameInput,
+.emailInput,
+.passwordInput {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.fullName {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+  margin: 0 0 8px 0;
+}
+
+.nameInp,
+.emailInp,
+.passwordInp {
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: #f9ed32;
+}
+
+.input::placeholder {
+  color: #999999;
+}
+
+.buttonFrame {
+  width: 100%;
+  padding: 12px 24px;
+  background: #f9ed32;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 20px 0;
+  transition: background-color 0.2s;
+}
+
+.buttonFrame:hover {
+  background: #e6d429;
+}
+
+.createAccount {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 19px;
+  text-align: center;
+  color: #000000;
+  margin: 0;
+}
+
+.alreadyHaveAAccountL4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 17px;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.alreadyHaveAAccountL {
+  color: #000000;
+}
+
+.alreadyHaveAAccountL2 {
+  color: #000000;
+}
+
+.alreadyHaveAAccountL3 {
+  color: #0066cc;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.aOr {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  text-align: center;
+  color: #666666;
+  margin: 20px 0;
+}
+
+.autoWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buttonFrame2,
+.buttonFrame3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 24px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.buttonFrame2:hover,
+.buttonFrame3:hover {
+  background: #f5f5f5;
+}
+
+.google {
+  width: 20px;
+  height: 20px;
+}
+
+.singUpWithGoogle,
+.singUpWithGitHub {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+  margin: 0;
+}
+
+.reservedDirectsToLeo {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 15px;
+  text-align: center;
+  color: #999999;
+  margin: 20px 0 0 0;
+}
