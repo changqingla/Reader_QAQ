@@ -1,90 +1,57 @@
-# 智能文献管理系统 (Intelligent Literature Management System)
+# React + TypeScript + Vite
 
-<div align="center">
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![Flutter](https://img.shields.io/badge/flutter-3.16+-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
+Currently, two official plugins are available:
 
-一个集文献管理、知识提取、智能对话于一体的综合性学术研究平台
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-</div>
+## Expanding the ESLint configuration
 
-## 📖 项目简介
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-智能文献管理系统是一个基于AI技术的现代化学术研究平台，旨在解决研究人员在文献管理中面临的核心痛点。系统通过先进的自然语言处理技术自动提取文献知识图谱，构建智能知识库，并提供基于知识图谱的智能对话服务，帮助研究人员高效管理文献、快速获取知识洞察。
-
-### 🎯 解决的核心问题
-
-- **信息过载**：海量文献难以有效筛选和管理
-- **知识碎片化**：文献间关联关系不清晰，难以形成系统性认知
-- **检索效率低**：传统关键词搜索无法满足深度语义理解需求
-- **协作困难**：团队间文献共享和知识传承缺乏有效工具
-
-## ✨ 核心功能
-
-### 🤖 智能对话模块
-- **智能问答**：基于文献内容的AI对话，支持多轮深度交互
-- **上下文理解**：可选择单个或多个文献作为对话上下文
-- **对话保存**：将有价值的对话内容保存为个人笔记
-- **预设问题**：提供常用学术问题模板，提高查询效率
-
-### 📚 文献管理模块
-- **多格式支持**：支持PDF、Word、TXT等多种文档格式
-- **智能分类**：自动提取文献元数据，支持自定义标签分类
-- **全文搜索**：基于Elasticsearch的高效全文检索
-- **批量处理**：支持批量上传和导入文献
-
-### 🕸️ 知识图谱模块
-- **自动构建**：基于文献内容自动提取实体和关系
-- **可视化展示**：交互式图谱界面，支持缩放、拖拽操作
-- **关系分析**：展示概念间的关联关系和强度
-- **路径查找**：智能查找概念间的关联路径
-
-### 👥 协作管理模块
-- **团队组织**：创建研究团队，支持多层级权限管理
-- **文献共享**：组织内文献库共享和协作标注
-- **成员管理**：灵活的成员邀请和权限分配机制
-- **协作统计**：团队活跃度和知识贡献分析
-
-## 🏗️ 技术架构
-
-### 后端技术栈
-- **Web框架**: FastAPI 0.104+ - 高性能异步API框架
-- **数据库**: PostgreSQL 15+ - 主数据存储
-- **图数据库**: Neo4j 5.0+ - 知识图谱存储
-- **缓存**: Redis 7.0+ - 高速缓存和会话存储
-- **搜索引擎**: Elasticsearch 8.0+ - 全文搜索
-- **对象存储**: MinIO - S3兼容的文件存储
-- **AI集成**: OpenAI API, Transformers - 智能对话和NLP处理
-- **任务队列**: Celery + Redis - 异步任务处理
-
-### 前端技术栈
-- **框架**: Flutter 3.16+ - 跨平台UI框架
-- **状态管理**: Riverpod 2.4+ - 响应式状态管理
-- **路由管理**: go_router 12.0+ - 声明式路由
-- **HTTP客户端**: dio 5.3+ - 网络请求处理
-- **本地存储**: shared_preferences, hive - 本地数据存储
-- **UI设计**: Material Design 3 - 现代化UI设计
-- **图表可视化**: fl_chart, graphview - 数据可视化
-
-### 架构设计
+```js
+export default tseslint.config({
+  extends: [
+    // Remove ...tseslint.configs.recommended and replace with this
+    ...tseslint.configs.recommendedTypeChecked,
+    // Alternatively, use this for stricter rules
+    ...tseslint.configs.strictTypeChecked,
+    // Optionally, add this for stylistic rules
+    ...tseslint.configs.stylisticTypeChecked,
+  ],
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Flutter Client │────│   API Gateway    │────│  FastAPI Backend│
-│  (Web/Desktop)  │    │                  │    │                 │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                                         │
-                        ┌────────────────────────────────┼─────────────────┐
-                        │                                │                 │
-                ┌───────▼────────┐              ┌────────▼────────┐ ┌──────▼──────┐
-                │  PostgreSQL    │              │     Neo4j       │ │    Redis    │
-                │ (关系数据库)    │              │  (图数据库)     │ │   (缓存)    │
-                └────────────────┘              └─────────────────┘ └─────────────┘
-                        │                                │
-                ┌───────▼────────┐              ┌────────▼────────┐
-                │ Elasticsearch  │              │     MinIO       │
-                │   (搜索引擎)    │              │  (对象存储)     │
-                └────────────────┘              └─────────────────┘
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default tseslint.config({
+  extends: [
+    // other configs...
+    // Enable lint rules for React
+    reactX.configs['recommended-typescript'],
+    // Enable lint rules for React DOM
+    reactDom.configs.recommended,
+  ],
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```

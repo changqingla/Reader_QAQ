@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: reader_postgres
+    environment:
+      POSTGRES_DB: reader_qaq
+      POSTGRES_USER: reader
+      POSTGRES_PASSWORD: reader_dev_password
+      TZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reader_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: reader_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass reader_dev_password
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - reader_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: reader_minio
+    environment:
+      MINIO_ROOT_USER: reader
+      MINIO_ROOT_PASSWORD: reader_dev_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - reader_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  reader_network:
+    driver: bridge
+

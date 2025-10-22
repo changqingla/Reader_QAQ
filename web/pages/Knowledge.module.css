@@ -1,0 +1,85 @@
+.page {
+  display: flex;
+  height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+.sidebarContainer { flex-shrink: 0; z-index: 1000; }
+
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.hubHeader { height: 56px; display: flex; align-items: center; justify-content: center; padding: 0 20px; border-bottom: none; font-weight: 700; }
+
+/* 二级侧栏 + 主内容布局 */
+.contentArea { flex: 1; display: flex; min-height: 0; }
+
+.subSidebar { width: 260px; border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 14px; }
+.subHeader { display: flex; align-items: center; }
+.hubTab { background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.subSearch { position: relative; }
+.subSearchIcon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.subSearchInput { width: 100%; padding: 10px 12px 10px 28px; background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; outline: none; }
+.storageRow { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.addKbBtn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; border-radius: 4px; }
+.addKbBtn:hover { background: var(--bg-elev-2); color: var(--text); }
+.myList { display: flex; flex-direction: column; gap: 6px; }
+.myItem { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 6px; color: var(--text); }
+.myItem:hover { background: var(--bg-elev-2); }
+.myDot { width: 8px; height: 8px; border-radius: 50%; background: #6366f1; display: inline-block; }
+.sectionCollapse { display: flex; flex-direction: column; gap: 6px; }
+.collapseBtnSm { background: none; border: none; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.subscribeList { display: flex; flex-direction: column; gap: 6px; }
+.subItem { display: flex; align-items: center; gap: 8px; color: var(--text); padding: 8px 6px; border-radius: 6px; }
+.subItem:hover { background: var(--bg-elev-2); }
+
+.hubMain { flex: 1; min-width: 0; padding: 16px 20px; overflow: auto; }
+.searchWrap { position: relative; max-width: 640px; margin: 0 auto; }
+.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.search { width: 100%; background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 16px 10px 36px; outline: none; }
+.tags { margin: 12px auto 6px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.tag { background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 12px; cursor: pointer; }
+.tag:hover { background: var(--bg-elev-1); }
+.tagActive { background: var(--bg-elev-1); border-color: var(--border); color: var(--text); }
+
+.feed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-width: 900px; margin: 0 auto; }
+.feedItem { display: flex; gap: 12px; align-items: center; background: transparent; border: none; border-radius: 8px; padding: 8px; cursor: pointer; transition: background 0.15s ease; }
+.feedItem:hover { background: var(--bg-elev-2); }
+.feedIcon {
+  flex: 0 0 25%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  background: var(--bg-elev-2);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.feedBody { flex: 1; min-width: 0; }
+.feedTitle { color: var(--text); font-weight: 600; }
+.feedDesc {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.feedMeta { display: flex; gap: 10px; margin-top: 6px; }
+.metaChip { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 12px; background: var(--chip-bg); border: 1px solid var(--chip-border); padding: 2px 8px; border-radius: 8px; }
+@media (max-width: 1024px) {
+  .feed { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 900px; }
+}
+@media (max-width: 640px) {
+  .feed { grid-template-columns: 1fr; max-width: 600px; }
+}
+
+@media (max-width: 900px) {
+  .subSidebar { display: none; }
+  .hubMain { padding: 12px; }
+}
+
+
