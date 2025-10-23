@@ -22,8 +22,9 @@
 .input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.15); background: var(--bg-elev-1); }
 .hint { color: var(--text-muted); font-size: 12px; }
 .submit { width: 100%; padding: 13px 14px; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; font-weight: 700; letter-spacing: .5px; font-size: 15px; transition: all .2s ease; }
-.submit:hover { box-shadow: 0 4px 16px rgba(99,102,241,.35); transform: translateY(-1px); }
-.submit:active { transform: translateY(0); }
+.submit:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(94, 96, 229, 0.35); transform: translateY(-1px); }
+.submit:active:not(:disabled) { transform: translateY(0); }
+.submit:disabled { opacity: 0.6; cursor: not-allowed; }
 .right { display: none; }
 @media (min-width: 980px) { 
   .right { 

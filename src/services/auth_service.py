@@ -17,10 +17,16 @@ class AuthService:
         """Login user and return token."""
         user = await self.user_repo.get_by_email(email)
         
-        if not user or not verify_password(password, user.password_hash):
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "NOT_FOUND", "message": "账号未注册"}}
+            )
+        
+        if not verify_password(password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={"error": {"code": "UNAUTHORIZED", "message": "Invalid email or password"}}
+                detail={"error": {"code": "UNAUTHORIZED", "message": "密码不正确"}}
             )
         
         # Create access token

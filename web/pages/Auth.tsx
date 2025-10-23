@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authAPI } from '@/lib/api';
 import styles from './Auth.module.css';
 
 type Tab = 'login' | 'register';
@@ -13,32 +14,65 @@ export default function Auth() {
   const [confirm, setConfirm] = React.useState('');
   const [accept, setAccept] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
 
   const validateEmail = (v: string) => /.+@.+\..+/.test(v);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!validateEmail(email)) return setError('请输入有效邮箱');
-    if (password.length < 6) return setError('密码至少 6 位');
-    if (tab === 'register') {
-      if (!name.trim()) return setError('请输入昵称');
-      if (password !== confirm) return setError('两次密码不一致');
-      if (!accept) return setError('请勾选协议');
+    setLoading(true);
+    
+    try {
+      // 前端验证
+      if (!validateEmail(email)) {
+        setError('请输入有效邮箱');
+        return;
+      }
+      if (password.length < 6) {
+        setError('密码至少 6 位');
+        return;
+      }
+      
+      if (tab === 'register') {
+        if (!name.trim()) {
+          setError('请输入昵称');
+          return;
+        }
+        if (password !== confirm) {
+          setError('两次密码不一致');
+          return;
+        }
+        
+        // 调用注册 API
+        const response = await authAPI.register(email, password, name);
+        
+        // 注册成功后切换到登录页
+        setTab('login');
+        setPassword('');
+        setConfirm('');
+        setName('');
+        setError('注册成功！请登录');
+      } else {
+        // 调用登录 API
+        const response = await authAPI.login(email, password);
+        
+        // 保存 token 和用户信息
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('auth_user', JSON.stringify(response.user));
+        localStorage.setItem('userProfile', JSON.stringify({
+          name: response.user.name,
+          email: response.user.email
+        }));
+        
+        // 跳转到主页
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.message || '操作失败，请重试');
+    } finally {
+      setLoading(false);
     }
-    // 模拟登录/注册成功，颁发本地 token
-    const token = 'local-demo-token.' + Date.now();
-    localStorage.setItem('auth_token', token);
-    localStorage.setItem('auth_user', JSON.stringify({ email, name: name || email.split('@')[0] }));
-    if (tab === 'register') {
-      // 注册成功后跳转到登录页
-      setTab('login');
-      setPassword('');
-      setConfirm('');
-      return;
-    }
-    // 登录成功后跳转到主页
-    navigate('/');
   };
 
   return (
@@ -76,9 +110,11 @@ export default function Auth() {
               </label>
             )} */}
 
-            {error && <div className={styles.hint} style={{color:'#ef4444'}}>{error}</div>}
+            {error && <div className={styles.hint} style={{color: error.includes('成功') ? '#22c55e' : '#ef4444'}}>{error}</div>}
 
-            <button className={styles.submit} type="submit">{tab==='login'?'登录':'注册'}</button>
+            <button className={styles.submit} type="submit" disabled={loading}>
+              {loading ? '处理中...' : (tab === 'login' ? '登录' : '注册')}
+            </button>
           </form>
 
           <div className={styles.switchHint}>
