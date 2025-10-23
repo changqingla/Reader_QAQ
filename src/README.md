@@ -1,8 +1,8 @@
-# Reader QAQ - Backend API
+## Reader QAQ - 后端 API 服务
 
-基于 FastAPI 的后端服务，为 Reader QAQ 前端提供 RESTful API 支持。
+基于 FastAPI 的异步后端服务，为 Reader QAQ 前端提供 RESTful API 支持。
 
-## 技术栈
+## 📦 技术栈
 
 - **Python 3.11+**
 - **FastAPI** - 现代异步 Web 框架
@@ -10,9 +10,8 @@
 - **PostgreSQL** - 主数据库
 - **Redis** - 缓存与会话
 - **MinIO** - 对象存储（S3 兼容）
-- **Alembic** - 数据库迁移
 
-## 项目结构
+## 📁 项目结构
 
 ```
 src/
@@ -24,122 +23,148 @@ src/
 ├── middlewares/     # 中间件（认证、错误处理）
 ├── utils/           # 工具函数
 ├── types/           # Pydantic Schemas
-└── main.py          # 应用入口
+├── main.py          # 应用入口
+├── run.sh           # 启动脚本
+└── requirements.txt # Python 依赖
 ```
 
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 启动基础服务
 
 ```bash
-cd docker
+cd ../docker
 docker-compose up -d
 ```
 
 这将启动：
-- PostgreSQL (端口 5432)
-- Redis (端口 6379)
-- MinIO (端口 9000, 控制台 9001)
+- PostgreSQL (端口 5433)
+- Redis (端口6380)
+- MinIO (端口 8999, 控制台 9002)
 
-### 2. 安装依赖
+### 2. 启动后端服务
 
+```bash
+cd ../src
+./run.sh
+```
+
+或手动启动：
 ```bash
 cd src
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 3. 配置环境变量
-
-创建 `.env` 文件（参考配置见 `config/settings.py`）
-
-### 4. 初始化数据库
-
-```bash
-# 数据库表会在应用启动时自动创建
-# 如需使用 Alembic 迁移：
-# alembic init alembic
-# alembic revision --autogenerate -m "Initial migration"
-# alembic upgrade head
-```
-
-### 5. 启动开发服务器
-
-```bash
 python main.py
-# 或
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API 文档：http://localhost:8000/api/docs
+API 服务将运行在：http://localhost:8000
 
-## API 规范
+- **API 文档**：http://localhost:8000/api/docs
+- **ReDoc**：http://localhost:8000/api/redoc
 
-详细接口定义见项目根目录：
-- `API_SPEC.md` - 接口设计文档
-- `DB_SCHEMA.md` - 数据库设计文档
+## ✅ 已实现功能
 
-## 实现状态
+### 用户认证
+- ✅ POST `/api/auth/login` - 用户登录
+- ✅ POST `/api/auth/register` - 用户注册
+- ✅ GET `/api/auth/me` - 获取当前用户
 
-### ✅ 已实现
-- 用户认证（登录/注册）
-- 笔记管理（CRUD、文件夹、标签）
-- 收藏管理（添加/删除/列表）
-- 基础中间件（JWT 认证、错误处理）
+### 笔记管理
+- ✅ GET `/api/notes` - 列表（分页、搜索、筛选）
+- ✅ GET `/api/notes/{noteId}` - 获取详情
+- ✅ POST `/api/notes` - 创建笔记
+- ✅ PATCH `/api/notes/{noteId}` - 更新笔记
+- ✅ DELETE `/api/notes/{noteId}` - 删除笔记
+- ✅ POST `/api/notes:batchDelete` - 批量删除
+- ✅ POST `/api/notes/{noteId}:polish` - AI 润色
+- ✅ GET `/api/notes/folders` - 文件夹列表
 
-### 🚧 TODO（待实现）
-- 知识库创建与管理
-- 文档上传与处理
-- RAG 问答功能
-- 知识广场（Hub）管理
-- RSS 订阅
-- 文件上传至 MinIO
-- 速率限制中间件
-- 审计日志
+### 收藏管理
+- ✅ GET `/api/favorites` - 列表（类型筛选）
+- ✅ POST `/api/favorites` - 添加收藏
+- ✅ POST `/api/favorites:toggle` - 一键切换
+- ✅ PATCH `/api/favorites/{favoriteId}` - 更新标签
+- ✅ DELETE `/api/favorites/{favoriteId}` - 删除收藏
 
-## 开发规范
+### 其他
+- ✅ GET `/api/health` - 健康检查
 
-### 代码规范
-- 使用 Black 格式化代码
-- 使用 Flake8 进行 Lint
-- 使用 MyPy 进行类型检查
+## 🚧 TODO（待实现）
 
-```bash
-black .
-flake8 .
-mypy .
-```
+### 知识库功能（已标记 TODO）
+所有知识库相关接口已创建框架，在代码中用 `TODO` 标记待实现：
+
+- [ ] 知识库 CRUD 操作
+- [ ] 文档上传至 MinIO
+- [ ] 文档解析（PDF, DOCX, Markdown 等）
+- [ ] 向量化与存储（需集成 pgvector 或 Milvus）
+- [ ] RAG 问答（需集成 LLM API）
+- [ ] 文档状态追踪
+
+### 知识广场（已标记 TODO）
+- [ ] Hub 模型与 CRUD
+- [ ] 帖子管理
+- [ ] 订阅关系
+- [ ] 搜索与推荐
+
+## 🏗️ 架构设计
 
 ### 分层架构
-1. **Controller** - 处理 HTTP 请求/响应，调用 Service
-2. **Service** - 业务逻辑，调用 Repository
-3. **Repository** - 数据库操作，返回 Model
-4. **Model** - 数据库模型定义
+```
+Controller → Service → Repository → Model
+```
+
+- **Controller**: 处理 HTTP 请求/响应
+- **Service**: 业务逻辑实现
+- **Repository**: 数据库操作
+- **Model**: 数据库模型定义
+
+### 依赖注入
+使用 FastAPI 的 `Depends` 机制实现依赖注入。
 
 ### 错误处理
-统一使用 HTTPException 抛出错误，格式参考 `types/schemas.py` 中的 ErrorResponse。
+统一错误响应格式，参考 `types/schemas.py` 中的 `ErrorResponse`。
 
-### 异步编程
-所有数据库和 IO 操作使用 async/await。
+## 📚 相关文档
 
-## 测试
+- `../API_SPEC.md` - 完整的 API 接口设计
+- `../DB_SCHEMA.md` - PostgreSQL 数据库设计
+- `../docker/README.md` - Docker 服务说明
+
+## 🧪 测试
 
 ```bash
 pytest
 pytest --cov=. --cov-report=html
 ```
 
-## 部署
+## 📝 开发规范
 
-生产环境部署建议：
-1. 使用 Gunicorn + Uvicorn workers
-2. 配置 Nginx 反向代理
-3. 使用环境变量管理敏感配置
+### 代码格式化
+```bash
+black .
+flake8 .
+mypy .
+```
+
+### Git 提交规范
+- feat: 新功能
+- fix: 修复
+- docs: 文档
+- refactor: 重构
+- test: 测试
+
+## 🔒 安全注意事项
+
+⚠️ **生产环境部署前必须修改**：
+1. `SECRET_KEY` - 使用强随机字符串
+2. 所有数据库密码
+3. MinIO 访问密钥
 4. 启用 HTTPS
-5. 配置日志收集（如 Sentry）
+5. 配置防火墙规则
 
-## License
+## 📄 License
 
 MIT
 

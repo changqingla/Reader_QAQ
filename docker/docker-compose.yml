@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/postgres:16-alpine
     container_name: reader_postgres
     environment:
       POSTGRES_DB: reader_qaq
@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: reader_dev_password
       TZ: UTC
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
@@ -23,10 +23,10 @@ services:
       - reader_network
 
   redis:
-    image: redis:7-alpine
+    image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/valkey:8
     container_name: reader_redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: redis-server --appendonly yes --requirepass reader_dev_password
     volumes:
       - redis_data:/data
@@ -39,14 +39,14 @@ services:
       - reader_network
 
   minio:
-    image: minio/minio:latest
+    image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/minio:RELEASE.2023-12-20T01-00-02Z
     container_name: reader_minio
     environment:
       MINIO_ROOT_USER: reader
       MINIO_ROOT_PASSWORD: reader_dev_password
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8999:9000"
+      - "9002:9001"
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"

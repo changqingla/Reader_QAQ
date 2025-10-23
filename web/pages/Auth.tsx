@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Auth.module.css';
 
 type Tab = 'login' | 'register';
 
 export default function Auth() {
+  const navigate = useNavigate();
   const [tab, setTab] = React.useState<Tab>('login');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -35,27 +37,27 @@ export default function Auth() {
       setConfirm('');
       return;
     }
-    // 登录成功后跳转到指定主页
-    window.location.href = 'http://10.0.169.144:5173/';
+    // 登录成功后跳转到主页
+    navigate('/');
   };
 
   return (
     <div className={styles.page}>
       <div className={styles.left}>
         <div className={styles.card}>
-          <h1 className={styles.title}>你好，欢迎回来！</h1>
-          <p className={styles.subtitle}>面向 AI 时代的阅读与知识工作台</p>
+          <h1 className={styles.title}>你好，欢迎来到Reader！</h1>
+          <p className={styles.subtitle}>面向 AI 时代的阅读与知识平台</p>
 
           <form className={styles.form} onSubmit={handleSubmit}>
             {tab === 'register' && (
               <div className={styles.field}>
                 <label className={styles.label}>昵称</label>
-                <input className={styles.input} value={name} onChange={e=>setName(e.target.value)} placeholder="给自己起个名字" />
+                <input className={styles.input} value={name} onChange={e=>setName(e.target.value)} placeholder="给自己起个独具一格的昵称" />
               </div>
             )}
             <div className={styles.field}>
               <label className={styles.label}>邮箱</label>
-              <input className={styles.input} value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" />
+              <input className={styles.input} value={email} onChange={e=>setEmail(e.target.value)} placeholder="youarebest@example.com" />
             </div>
             <div className={styles.field}>
               <label className={styles.label}>密码</label>
@@ -68,11 +70,11 @@ export default function Auth() {
               </div>
             )}
 
-            {tab === 'register' && (
+            {/* {tab === 'register' && (
               <label className={styles.hint}>
                 <input type="checkbox" checked={accept} onChange={e=>setAccept(e.target.checked)} /> 我已阅读并同意服务协议
               </label>
-            )}
+            )} */}
 
             {error && <div className={styles.hint} style={{color:'#ef4444'}}>{error}</div>}
 
