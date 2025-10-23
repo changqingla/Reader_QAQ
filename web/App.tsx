@@ -18,7 +18,7 @@ export default function App() {
         <Route path="/knowledge" element={<Knowledge />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/notes" element={<Notes />} />
-        <Route path="/knowledge/default" element={<KnowledgeDetail />} />
+        <Route path="/knowledge/:kbId" element={<KnowledgeDetail />} />
         <Route path="/knowledge/hub/:hubId" element={<KnowledgeHubDetail />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/knowledge/hub/:hubId/post/:postId" element={<PostDetail />} />

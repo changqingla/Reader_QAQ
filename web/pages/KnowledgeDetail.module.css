@@ -331,13 +331,25 @@
   border-radius: 8px;
 }
 
-.fileName {
+.fileInfo {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fileName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
+  font-weight: 500;
+}
+
+.fileStatus {
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 .fileSize {

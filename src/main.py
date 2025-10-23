@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from config.settings import settings
 from config.database import engine, Base
 from config.redis import get_redis_client, close_redis
+from utils.external_services import close_http_client
 
 # Import controllers
 from controllers import auth_controller, note_controller, favorite_controller, kb_controller, hub_controller
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     print("🛑 Shutting down...")
+    await close_http_client()
     await close_redis()
     await engine.dispose()
     print("✅ Cleanup completed")

@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  postgres:
+  readerpostgres:
     image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/postgres:16-alpine
     container_name: reader_postgres
     environment:
@@ -22,7 +22,7 @@ services:
     networks:
       - reader_network
 
-  redis:
+  reader_redis:
     image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/valkey:8
     container_name: reader_redis
     ports:
@@ -38,7 +38,7 @@ services:
     networks:
       - reader_network
 
-  minio:
+  reader_minio:
     image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/minio:RELEASE.2023-12-20T01-00-02Z
     container_name: reader_minio
     environment:

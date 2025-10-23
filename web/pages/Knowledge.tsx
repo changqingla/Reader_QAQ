@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Search, Plus, Folder, Database, Rss, ChevronDown, Users } from 'lucide-react';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
+import { kbAPI } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 import styles from './Knowledge.module.css';
 
@@ -31,9 +32,8 @@ export default function Knowledge() {
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState('推荐');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [myKnowledgeBases, setMyKnowledgeBases] = useState([
-    { id: 'default', name: '默认知识库', description: '', tags: [] }
-  ]);
+  const [myKnowledgeBases, setMyKnowledgeBases] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -42,20 +42,40 @@ export default function Knowledge() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Load knowledge bases from backend
+  useEffect(() => {
+    loadKnowledgeBases();
+  }, []);
+
+  const loadKnowledgeBases = async () => {
+    try {
+      const response = await kbAPI.listKnowledgeBases();
+      setMyKnowledgeBases(response.items);
+    } catch (error) {
+      console.error('Failed to load knowledge bases:', error);
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return mockHub;
     return mockHub.filter(i => i.title.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q));
   }, [query]);
 
-  const handleAddKnowledgeBase = (data: { name: string; description: string; tags: string[] }) => {
-    const newKb = {
-      id: Date.now().toString(),
-      name: data.name,
-      description: data.description,
-      tags: data.tags
-    };
-    setMyKnowledgeBases([...myKnowledgeBases, newKb]);
+  const handleAddKnowledgeBase = async (data: { name: string; description: string; tags: string[] }) => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      await kbAPI.createKnowledgeBase(data.name, data.description, data.tags);
+      // Reload knowledge bases after creation
+      await loadKnowledgeBases();
+    } catch (error: any) {
+      console.error('Failed to create knowledge base:', error);
+      alert(error.message || '创建知识库失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

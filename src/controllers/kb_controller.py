@@ -1,10 +1,13 @@
-"""Knowledge Base API endpoints (TODO: Full implementation)."""
-from fastapi import APIRouter, Depends, Query, UploadFile, File
+"""Knowledge Base API endpoints."""
+from fastapi import APIRouter, Depends, Query, UploadFile, File, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from config.database import get_db
 from middlewares.auth import get_current_user
 from models.user import User
+from services.kb_service import KnowledgeBaseService
+from services.document_service import DocumentService
+from services.search_service import SearchService
 
 router = APIRouter(prefix="/kb", tags=["Knowledge Base"])
 
@@ -17,26 +20,14 @@ async def list_knowledge_bases(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    List user's knowledge bases.
-    
-    TODO: Implement knowledge base listing from database.
-    Current implementation returns mock data.
-    """
+    """List user's knowledge bases."""
+    service = KnowledgeBaseService(db)
+    items, total = await service.list_kbs(str(current_user.id), q, page, pageSize)
     return {
-        "total": 1,
+        "total": total,
         "page": page,
         "pageSize": pageSize,
-        "items": [
-            {
-                "id": "kb_default",
-                "name": "默认知识库",
-                "description": "系统自动创建",
-                "tags": [],
-                "contents": 0,
-                "createdAt": "2025-01-01"
-            }
-        ]
+        "items": items
     }
 
 
@@ -46,12 +37,14 @@ async def create_knowledge_base(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Create a new knowledge base.
-    
-    TODO: Implement knowledge base creation.
-    """
-    return {"id": "kb_new"}
+    """Create a new knowledge base."""
+    service = KnowledgeBaseService(db)
+    return await service.create_kb(
+        str(current_user.id),
+        request["name"],
+        request.get("description"),
+        request.get("tags", [])
+    )
 
 
 @router.patch("/{kbId}")
@@ -61,12 +54,9 @@ async def update_knowledge_base(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Update knowledge base.
-    
-    TODO: Implement knowledge base update.
-    """
-    return {"success": True}
+    """Update knowledge base."""
+    service = KnowledgeBaseService(db)
+    return await service.update_kb(kbId, str(current_user.id), **request)
 
 
 @router.delete("/{kbId}")
@@ -75,61 +65,33 @@ async def delete_knowledge_base(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Delete knowledge base.
-    
-    TODO: Implement knowledge base deletion.
-    """
+    """Delete knowledge base."""
+    service = KnowledgeBaseService(db)
+    await service.delete_kb(kbId, str(current_user.id))
     return {"success": True}
 
 
 @router.get("/quota")
 async def get_quota(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
-    """
-    Get storage quota.
-    
-    TODO: Calculate actual usage from documents.
-    """
-    return {"usedBytes": 0, "limitBytes": 500000000000}
+    """Get storage quota."""
+    service = KnowledgeBaseService(db)
+    return await service.get_quota(str(current_user.id))
 
 
 @router.post("/{kbId}/documents")
 async def upload_document(
     kbId: str,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Upload document to knowledge base.
-    
-    TODO: Implement:
-    - File upload to MinIO
-    - Document parsing (PDF, DOCX, etc.)
-    - Text extraction
-    - Vectorization for RAG
-    """
-    return {"id": "doc_new", "name": file.filename, "status": "processing"}
-
-
-@router.post("/{kbId}/documents:fromUrl")
-async def add_from_url(
-    kbId: str,
-    request: dict,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Add document from URL.
-    
-    TODO: Implement:
-    - URL crawling
-    - Content extraction
-    - Document processing
-    """
-    return {"id": "doc_new", "name": request.get("url"), "status": "processing"}
+    """Upload document to knowledge base."""
+    service = DocumentService(db)
+    return await service.upload_document(kbId, str(current_user.id), file, background_tasks)
 
 
 @router.get("/{kbId}/documents")
@@ -140,12 +102,22 @@ async def list_documents(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    List documents in knowledge base.
-    
-    TODO: Implement document listing from database.
-    """
-    return {"total": 0, "page": page, "pageSize": pageSize, "items": []}
+    """List documents in knowledge base."""
+    service = DocumentService(db)
+    items, total = await service.list_documents(kbId, str(current_user.id), page, pageSize)
+    return {"total": total, "page": page, "pageSize": pageSize, "items": items}
+
+
+@router.get("/{kbId}/documents/{docId}/status")
+async def get_document_status(
+    kbId: str,
+    docId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get document processing status."""
+    service = DocumentService(db)
+    return await service.get_document_status(docId, kbId, str(current_user.id))
 
 
 @router.delete("/{kbId}/documents/{docId}")
@@ -155,11 +127,9 @@ async def delete_document(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Delete a document.
-    
-    TODO: Implement document deletion from database and storage.
-    """
+    """Delete a document."""
+    service = DocumentService(db)
+    await service.delete_document(docId, kbId, str(current_user.id))
     return {"success": True}
 
 
@@ -171,17 +141,23 @@ async def chat_with_kb(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Ask questions to knowledge base.
-    
-    TODO: Implement RAG-based Q&A:
-    - Vector similarity search
-    - Context retrieval
-    - LLM integration
-    - Answer generation with references
+    Search in knowledge base (retrieve relevant chunks).
+    Note: LLM answer generation is not implemented yet.
     """
+    service = SearchService(db)
+    question = request.get("question", "")
+    top_n = request.get("top_n", 10)
+    
+    search_results = await service.search_in_kb(
+        kbId,
+        str(current_user.id),
+        question,
+        top_n=top_n
+    )
+    
+    # Return search results (without LLM-generated answer)
     return {
-        "messageId": "m_new",
-        "answer": "TODO: Implement RAG Q&A with knowledge base",
-        "references": []
+        "messageId": "search_" + str(hash(question)),
+        "references": search_results["references"],
+        "answer": "检索完成，找到相关内容（LLM问答功能暂未实现）"
     }
-

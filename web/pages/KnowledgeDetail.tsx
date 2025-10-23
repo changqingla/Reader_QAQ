@@ -1,6 +1,8 @@
 import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
+import { kbAPI } from '@/lib/api';
 import { 
   Upload, 
   FileText, 
@@ -15,21 +17,24 @@ import {
   Plus,
   MessageCircle,
   ChevronDown,
-  Folder
+  Folder,
+  Loader2
 } from 'lucide-react';
 import styles from './KnowledgeDetail.module.css';
 
 export default function KnowledgeDetail() {
+  const { kbId } = useParams<{ kbId: string }>();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
-  const [files, setFiles] = React.useState<File[]>([]);
   const [isDragging, setIsDragging] = React.useState(false);
   const [askInput, setAskInput] = React.useState('');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [myKnowledgeBases, setMyKnowledgeBases] = React.useState([
-    { id: 'default', name: '默认知识库', description: '', tags: [] as string[] },
-    { id: 'test', name: '测试', description: '', tags: [] as string[] }
-  ]);
+  const [myKnowledgeBases, setMyKnowledgeBases] = React.useState<any[]>([]);
+  const [currentKb, setCurrentKb] = React.useState<any>(null);
+  const [documents, setDocuments] = React.useState<any[]>([]);
+  const [uploading, setUploading] = React.useState(false);
+  const [quota, setQuota] = React.useState({ usedBytes: 0, limitBytes: 500000000000 });
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   
   React.useEffect(() => {
@@ -39,10 +44,62 @@ export default function KnowledgeDetail() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const addFiles = (newFiles: FileList | null) => {
-    if (!newFiles) return;
-    const next = Array.from(newFiles);
-    setFiles(prev => [...prev, ...next]);
+  // Load knowledge bases and quota
+  React.useEffect(() => {
+    loadKnowledgeBases();
+    loadQuota();
+  }, []);
+
+  // Load documents when kbId from URL changes
+  React.useEffect(() => {
+    if (kbId) {
+      loadCurrentKB();
+      loadDocuments();
+    }
+  }, [kbId]);
+
+  const loadKnowledgeBases = async () => {
+    try {
+      const response = await kbAPI.listKnowledgeBases();
+      setMyKnowledgeBases(response.items);
+    } catch (error) {
+      console.error('Failed to load knowledge bases:', error);
+    }
+  };
+
+  const loadCurrentKB = async () => {
+    if (!kbId) return;
+    try {
+      const kb = myKnowledgeBases.find(kb => kb.id === kbId);
+      if (kb) {
+        setCurrentKb(kb);
+      } else {
+        // KB not in list yet, fetch from myKnowledgeBases
+        await loadKnowledgeBases();
+      }
+    } catch (error) {
+      console.error('Failed to load current KB:', error);
+    }
+  };
+
+  const loadQuota = async () => {
+    try {
+      const response = await kbAPI.getQuota();
+      setQuota(response);
+    } catch (error) {
+      console.error('Failed to load quota:', error);
+    }
+  };
+
+  const loadDocuments = async () => {
+    if (!kbId) return;
+    
+    try {
+      const response = await kbAPI.listDocuments(kbId);
+      setDocuments(response.items);
+    } catch (error) {
+      console.error('Failed to load documents:', error);
+    }
   };
 
   const handleDragEnter: React.DragEventHandler<HTMLDivElement> = (e) => {
@@ -57,24 +114,74 @@ export default function KnowledgeDetail() {
     setIsDragging(false);
   };
 
-  const handleDrop: React.DragEventHandler<HTMLDivElement> = (e) => {
+  const handleDrop: React.DragEventHandler<HTMLDivElement> = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    addFiles(e.dataTransfer.files);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await handleFilesUpload(Array.from(e.dataTransfer.files));
+    }
   };
 
   const handleOpenPicker = () => fileInputRef.current?.click();
-  const removeFile = (idx: number) => setFiles(prev => prev.filter((_, i) => i !== idx));
 
-  const handleAddKnowledgeBase = (data: { name: string; description: string; tags: string[] }) => {
-    const newKb = {
-      id: Date.now().toString(),
-      name: data.name,
-      description: data.description,
-      tags: data.tags
-    };
-    setMyKnowledgeBases([...myKnowledgeBases, newKb]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await handleFilesUpload(Array.from(e.target.files));
+      e.target.value = ''; // Reset input
+    }
+  };
+
+  const handleFilesUpload = async (files: File[]) => {
+    if (!kbId) {
+      alert('请先选择一个知识库');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      for (const file of files) {
+        await kbAPI.uploadDocument(kbId, file);
+      }
+      // Reload documents after upload
+      await loadDocuments();
+      await loadQuota();
+    } catch (error: any) {
+      alert(error.message || '上传失败');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!kbId) return;
+    if (!confirm('确定要删除这个文档吗？')) return;
+
+    try {
+      await kbAPI.deleteDocument(kbId, docId);
+      await loadDocuments();
+      await loadQuota();
+    } catch (error: any) {
+      alert(error.message || '删除失败');
+    }
+  };
+
+  const handleAddKnowledgeBase = async (data: { name: string; description: string; tags: string[] }) => {
+    try {
+      await kbAPI.createKnowledgeBase(data.name, data.description, data.tags);
+      await loadKnowledgeBases();
+    } catch (error: any) {
+      alert(error.message || '创建知识库失败');
+    }
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
   };
 
   return (
@@ -111,10 +218,11 @@ export default function KnowledgeDetail() {
               </button>
             </div>
             <div className={styles.myList}>
-              {myKnowledgeBases.map((kb, index) => (
+              {myKnowledgeBases.map((kb) => (
                 <button 
                   key={kb.id}
-                  className={index === 0 ? styles.myItemActive : styles.myItem}
+                  className={kb.id === kbId ? styles.myItemActive : styles.myItem}
+                  onClick={() => navigate(`/knowledge/${kb.id}`)}
                 >
                   <span className={styles.myDot} />
                   {kb.name}
@@ -138,10 +246,14 @@ export default function KnowledgeDetail() {
             <div className={styles.uploadCard}>
               <div className={styles.kbTitle}>
                 <Database size={20} />
-                <span>默认知识库</span>
+                <span>{currentKb?.name || '请选择知识库'}</span>
               </div>
-              <div className={styles.kbSubtitle}>长圈、系统自动创建的默认知识库</div>
-              <div className={styles.kbMeta}>0 内容</div>
+              {currentKb?.description && (
+                <div className={styles.kbSubtitle}>{currentKb.description}</div>
+              )}
+              <div className={styles.kbMeta}>
+                {currentKb?.contents || 0} 内容 · {formatBytes(quota.usedBytes)} / {formatBytes(quota.limitBytes)}
+              </div>
 
               <div
                 className={`${styles.dropzone} ${isDragging ? styles.dropzoneActive : ''}`}
@@ -168,26 +280,42 @@ export default function KnowledgeDetail() {
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  onChange={(e) => addFiles(e.target.files)}
+                  accept=".pdf,.md,.txt,.docx,.xlsx,.pptx"
+                  onChange={handleFileChange}
                   className={styles.hiddenInput}
+                  disabled={uploading || !kbId}
                 />
-                <button className={styles.uploadButton} onClick={handleOpenPicker} aria-label="上传文件">
-                  上传文件
-                </button>
-                <button className={styles.pluginButton} onClick={() => alert('示例：打开浏览器插件以添加网页（前端演示）')}>
-                  <Globe size={16} />
-                  用插件添加网页
+                <button 
+                  className={styles.uploadButton} 
+                  onClick={handleOpenPicker} 
+                  disabled={uploading || !kbId}
+                  aria-label="上传文件"
+                >
+                  {uploading ? <><Loader2 size={16} className="animate-spin" /> 上传中...</> : '上传文件'}
                 </button>
               </div>
 
-              {files.length > 0 && (
+              {documents.length > 0 && (
                 <div className={styles.fileList}>
-                  {files.map((f, idx) => (
-                    <div key={`${f.name}-${idx}`} className={styles.fileRow}>
+                  {documents.map((doc) => (
+                    <div key={doc.id} className={styles.fileRow}>
                       <FileText size={16} />
-                      <span className={styles.fileName}>{f.name}</span>
-                      <span className={styles.fileSize}>{(f.size / 1024 / 1024).toFixed(2)}MB</span>
-                      <button className={styles.removeBtn} onClick={() => removeFile(idx)}>
+                      <div className={styles.fileInfo}>
+                        <span className={styles.fileName}>{doc.name}</span>
+                        <span className={styles.fileStatus}>
+                          {doc.status === 'ready' && `${doc.chunkCount} 个分块`}
+                          {doc.status === 'processing' && '处理中...'}
+                          {doc.status === 'uploading' && '上传中...'}
+                          {doc.status === 'chunking' && '分块中...'}
+                          {doc.status === 'embedding' && '向量化中...'}
+                          {doc.status === 'failed' && '处理失败'}
+                        </span>
+                      </div>
+                      <button 
+                        className={styles.removeBtn} 
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        title="删除文档"
+                      >
                         <X size={14} />
                       </button>
                     </div>

@@ -81,6 +81,127 @@ export const authAPI = {
   },
 };
 
+// 知识库相关 API
+export const kbAPI = {
+  /**
+   * 列出知识库
+   */
+  async listKnowledgeBases(query?: string, page: number = 1, pageSize: number = 20) {
+    const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
+    if (query) params.append('q', query);
+    return request<{ total: number; page: number; pageSize: number; items: any[] }>(
+      `/kb?${params}`,
+      { method: 'GET' }
+    );
+  },
+
+  /**
+   * 创建知识库
+   */
+  async createKnowledgeBase(name: string, description: string, tags: string[]) {
+    return request<{ id: string }>('/kb', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, tags }),
+    });
+  },
+
+  /**
+   * 更新知识库
+   */
+  async updateKnowledgeBase(kbId: string, data: { name?: string; description?: string; tags?: string[] }) {
+    return request<{ success: boolean }>(`/kb/${kbId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * 删除知识库
+   */
+  async deleteKnowledgeBase(kbId: string) {
+    return request<{ success: boolean }>(`/kb/${kbId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * 获取存储配额
+   */
+  async getQuota() {
+    return request<{ usedBytes: number; limitBytes: number }>('/kb/quota', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * 上传文档
+   */
+  async uploadDocument(kbId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/kb/${kbId}/documents`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      const error = data.detail?.error || data.error || data;
+      throw new Error(error.message || '上传失败');
+    }
+
+    return data;
+  },
+
+  /**
+   * 列出文档
+   */
+  async listDocuments(kbId: string, page: number = 1, pageSize: number = 20) {
+    const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
+    return request<{ total: number; page: number; pageSize: number; items: any[] }>(
+      `/kb/${kbId}/documents?${params}`,
+      { method: 'GET' }
+    );
+  },
+
+  /**
+   * 获取文档处理状态
+   */
+  async getDocumentStatus(kbId: string, docId: string) {
+    return request<{ status: string; errorMessage: string | null; chunkCount: number }>(
+      `/kb/${kbId}/documents/${docId}/status`,
+      { method: 'GET' }
+    );
+  },
+
+  /**
+   * 删除文档
+   */
+  async deleteDocument(kbId: string, docId: string) {
+    return request<{ success: boolean }>(`/kb/${kbId}/documents/${docId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * 在知识库中检索
+   */
+  async searchInKB(kbId: string, question: string, topN: number = 10) {
+    return request<{ messageId: string; references: any[]; answer: string }>(
+      `/kb/${kbId}/chat/messages`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ question, top_n: topN }),
+      }
+    );
+  },
+};
+
 // 笔记相关 API (TODO)
 export const noteAPI = {
   // TODO: 实现笔记相关 API 调用
@@ -89,10 +210,5 @@ export const noteAPI = {
 // 收藏相关 API (TODO)
 export const favoriteAPI = {
   // TODO: 实现收藏相关 API 调用
-};
-
-// 知识库相关 API (TODO)
-export const kbAPI = {
-  // TODO: 实现知识库相关 API 调用
 };
 
