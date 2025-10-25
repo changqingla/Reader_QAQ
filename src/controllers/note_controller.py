@@ -11,7 +11,7 @@ from models.user import User
 router = APIRouter(prefix="/notes", tags=["Notes"])
 
 
-@router.get("/folders", response_model=List[NoteFolderItem])
+@router.get("/folders")
 async def list_folders(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -19,13 +19,50 @@ async def list_folders(
     """List note folders."""
     service = NoteService(db)
     folders = await service.list_folders(str(current_user.id))
-    return folders
+    return {"folders": [{"id": f["id"], "name": f["name"], "noteCount": f["count"], "createdAt": ""} for f in folders]}
+
+
+@router.post("/folders")
+async def create_folder(
+    request: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new folder."""
+    service = NoteService(db)
+    folder = await service.create_folder(str(current_user.id), request["name"])
+    return {"id": str(folder["id"]), "name": folder["name"]}
+
+
+@router.patch("/folders/{folderId}")
+async def rename_folder(
+    folderId: str,
+    request: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Rename a folder."""
+    service = NoteService(db)
+    await service.rename_folder(folderId, str(current_user.id), request["name"])
+    return {"success": True}
+
+
+@router.delete("/folders/{folderId}")
+async def delete_folder(
+    folderId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a folder."""
+    service = NoteService(db)
+    await service.delete_folder(folderId, str(current_user.id))
+    return {"success": True}
 
 
 @router.get("")
 async def list_notes(
     folderId: Optional[str] = Query(None),
-    q: Optional[str] = Query(None),
+    query: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
@@ -34,7 +71,7 @@ async def list_notes(
     """List notes with pagination."""
     service = NoteService(db)
     items, total = await service.list_notes(
-        str(current_user.id), folderId, q, page, pageSize
+        str(current_user.id), folderId, query, page, pageSize
     )
     return {"total": total, "page": page, "pageSize": pageSize, "items": items}
 

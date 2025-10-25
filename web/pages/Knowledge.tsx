@@ -1,82 +1,143 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Search, Plus, Folder, Database, Rss, ChevronDown, Users } from 'lucide-react';
+/**
+ * 知识广场页面
+ * 显示公开知识库、支持分类浏览、2025精选列表
+ */
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, Plus, Database, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import Sidebar from '@/components/Sidebar/Sidebar';
+import KnowledgeSidebar from '@/components/KnowledgeSidebar/KnowledgeSidebar';
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
+import EditKnowledgeModal from '@/components/EditKnowledgeModal/EditKnowledgeModal';
 import { kbAPI } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/useToast';
+import { KNOWLEDGE_CATEGORIES, CATEGORY_ICONS } from '@/constants/categories';
 import styles from './Knowledge.module.css';
 
-interface HubItem {
-  id: string;
-  title: string;
-  desc: string;
-  icon: string;
-  subs: number; // 订阅
-  contents: number; // 内容数
-}
-
-const mockHub: HubItem[] = Array.from({ length: 20 }).map((_, i) => ({
-  id: String(i + 1),
-  title: ['DeepSeek 知识库','AI 智能体','金庸武侠','心理学与生活','R 机器学习','辩之论之','宇宙万象','诺奖书友圈'][i % 8] + ` · ${i+1}`,
-  desc: '这里面包含了各种热门的知识、材料与话题，欢迎一起分享与订阅。',
-  icon: '📘',
-  subs: 170 + i * 3,
-  contents: 40 + (i % 9) * 2,
-}));
+// 默认展示的 5 个分类
+const DEFAULT_CATEGORIES = ['工学', '经济学', '管理学', '文学', '历史学'];
 
 export default function Knowledge() {
   const navigate = useNavigate();
-  const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
+  const toast = useToast();
+  
+  // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [query, setQuery] = useState('');
-  const [activeTag, setActiveTag] = useState('推荐');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState(false);
+  
+  // Modal State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [kbToEdit, setKbToEdit] = useState<any>(null);
+  
+  // Data State
   const [myKnowledgeBases, setMyKnowledgeBases] = useState<any[]>([]);
+  const [publicKbs, setPublicKbs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Filter State
+  const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('2025精选');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Load knowledge bases from backend
   useEffect(() => {
     loadKnowledgeBases();
   }, []);
+
+  useEffect(() => {
+    loadPublicKBs();
+  }, [activeCategory, query]);
 
   const loadKnowledgeBases = async () => {
     try {
       const response = await kbAPI.listKnowledgeBases();
       setMyKnowledgeBases(response.items);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load knowledge bases:', error);
     }
   };
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return mockHub;
-    return mockHub.filter(i => i.title.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q));
-  }, [query]);
-
-  const handleAddKnowledgeBase = async (data: { name: string; description: string; tags: string[] }) => {
-    if (loading) return;
-    
+  const loadPublicKBs = async () => {
     setLoading(true);
     try {
-      await kbAPI.createKnowledgeBase(data.name, data.description, data.tags);
-      // Reload knowledge bases after creation
-      await loadKnowledgeBases();
-    } catch (error: any) {
-      console.error('Failed to create knowledge base:', error);
-      alert(error.message || '创建知识库失败');
+      if (activeCategory === '2025精选') {
+        const { items } = await kbAPI.listFeatured(1, 30);
+        setPublicKbs(items);
+      } else {
+        const { items } = await kbAPI.listPublicKBs(
+          activeCategory,
+          query || undefined,
+          1,
+          20
+        );
+        setPublicKbs(items);
+      }
+    } catch (error) {
+      console.error('加载公开知识库失败:', error);
+      setPublicKbs([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCreateKB = async (data: { name: string; description: string; category: string }) => {
+    try {
+      await kbAPI.createKnowledgeBase(data.name, data.description, data.category);
+      await loadKnowledgeBases();
+      toast.success('知识库创建成功！');
+    } catch (error: any) {
+      toast.error(error.message || '创建知识库失败');
+    }
+  };
+
+  const handleEditKB = (kb: any) => {
+    setKbToEdit(kb);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveKB = async (data: { name: string; description: string; category: string }) => {
+    if (!kbToEdit) return;
+    try {
+      await kbAPI.updateKnowledgeBase(kbToEdit.id, data);
+      await loadKnowledgeBases();
+      toast.success('知识库已更新');
+      setIsEditModalOpen(false);
+      setKbToEdit(null);
+    } catch (error: any) {
+      toast.error(error.message || '更新失败');
+    }
+  };
+
+  const handleDeleteKB = async (kbId: string) => {
+    try {
+      await kbAPI.deleteKnowledgeBase(kbId);
+      await loadKnowledgeBases();
+      toast.success('知识库已删除');
+    } catch (error: any) {
+      toast.error(error.message || '删除失败');
+    }
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setActiveCategory(category);
+    setExpandedCategories(false);
+  };
+
+  const handleKBClick = (kbId: string) => {
+    navigate(`/knowledge/${kbId}`);
+  };
+
+  // 获取可折叠的分类
+  const hiddenCategories = useMemo(() => {
+    return KNOWLEDGE_CATEGORIES.filter(cat => !DEFAULT_CATEGORIES.includes(cat));
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -84,102 +145,165 @@ export default function Knowledge() {
         <div className={styles.overlay} onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* 左侧主侧边栏 */}
       <div className={`${styles.sidebarContainer} ${isMobile && isSidebarOpen ? styles.open : ''}`}>
-        <Sidebar onNewChat={() => setSelectedChatId(undefined)} onSelectChat={(id) => setSelectedChatId(id)} selectedChatId={selectedChatId} />
+        <Sidebar onNewChat={() => {}} onSelectChat={() => {}} selectedChatId={undefined} />
       </div>
 
-      {/* 新建知识库弹窗 */}
+      {/* Modals */}
       <CreateKnowledgeModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddKnowledgeBase}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateKB}
       />
 
-      {/* 右侧内容区域：二级侧栏 + 主区 */}
+      {kbToEdit && (
+        <EditKnowledgeModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setKbToEdit(null);
+          }}
+          onSave={handleSaveKB}
+          initialData={{
+            name: kbToEdit.name,
+            description: kbToEdit.description,
+            category: kbToEdit.category || '其它'
+          }}
+        />
+      )}
+
       <div className={styles.main}>
-        <div className={styles.hubHeader}>知识广场</div>
-
         <div className={styles.contentArea}>
-          {/* 二级侧栏 */}
-          <aside className={styles.subSidebar}>
+          {/* Knowledge Sidebar */}
+          <KnowledgeSidebar
+            knowledgeBases={myKnowledgeBases}
+            onKnowledgeBasesChange={loadKnowledgeBases}
+            onCreateClick={() => setIsCreateModalOpen(true)}
+            onEditClick={handleEditKB}
+            onDeleteClick={handleDeleteKB}
+          />
 
-            <div className={styles.subSearch}>
-              <Search size={16} className={styles.subSearchIcon} />
-              <input className={styles.subSearchInput} placeholder="搜索你的知识库" />
-            </div>
-
-            <div className={styles.storageRow}>
-              <span>我的知识库</span>
-              <button className={styles.addKbBtn} onClick={() => setIsModalOpen(true)} aria-label="新建知识库">
-                <Plus size={14} />
-              </button>
-            </div>
-            <div className={styles.myList}>
-              {myKnowledgeBases.map(kb => (
-                <button
-                  key={kb.id}
-                  className={styles.myItem}
-                  onClick={() => navigate(kb.id === 'default' ? '/knowledge/default' : `/knowledge/${kb.id}`)}
-                  aria-label={`打开${kb.name}`}
-                >
-                  <span className={styles.myDot} />
-                  {kb.name}
-                </button>
-              ))}
-            </div>
-
-            <div className={styles.sectionCollapse}>
-              <button className={styles.collapseBtnSm}><ChevronDown size={14} /> 订阅</button>
-              <div className={styles.subscribeList}>
-                <div className={styles.subItem}><Folder size={14} /> 知识库</div>
-                <div className={styles.subItem}><Rss size={14} /> RSS</div>
-              </div>
-            </div>
-          </aside>
-
-          {/* 主内容区 */}
+          {/* Knowledge Square */}
           <section className={styles.hubMain}>
+            {/* Title */}
+            <h1 className={styles.hubTitle}>
+              <span className={styles.hubTitleIcon}>✨</span>
+              知识广场
+              <span className={styles.hubTitleIcon}>✨</span>
+            </h1>
+
+            {/* Search */}
             <div className={styles.searchWrap}>
               <Search size={18} className={styles.searchIcon} />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    loadPublicKBs();
+                  }
+                }}
                 className={styles.search}
                 placeholder="试试搜索感兴趣的知识库"
               />
             </div>
 
+            {/* Category Tags */}
             <div className={styles.tags}>
-              {['推荐','2025 年度精选','科学技术','学习','热门社区'].map(t => (
-                <button
-                  key={t}
-                  className={`${styles.tag} ${activeTag === t ? styles.tagActive : ''}`}
-                  onClick={() => setActiveTag(t)}
-                >{t}</button>
-              ))}
+              <button
+                className={`${styles.tag} ${activeCategory === '2025精选' ? styles.tagActive : ''}`}
+                onClick={() => handleCategoryClick('2025精选')}
+              >
+                🔥 2025精选
+              </button>
+              
+              {DEFAULT_CATEGORIES.map(cat => {
+                const Icon = CATEGORY_ICONS[cat];
+                return (
+                  <button
+                    key={cat}
+                    className={`${styles.tag} ${activeCategory === cat ? styles.tagActive : ''}`}
+                    onClick={() => handleCategoryClick(cat)}
+                  >
+                    {Icon && <Icon size={14} />} {cat}
+                  </button>
+                );
+              })}
+              
+              <button 
+                className={styles.tag}
+                onClick={() => setExpandedCategories(!expandedCategories)}
+              >
+                更多 {expandedCategories ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
             </div>
 
+            {/* Expanded Categories */}
+            {expandedCategories && (
+              <div className={styles.expandedCategories}>
+                {hiddenCategories.map(cat => {
+                  const Icon = CATEGORY_ICONS[cat];
+                  return (
+                    <button 
+                      key={cat} 
+                      className={`${styles.tag} ${activeCategory === cat ? styles.tagActive : ''}`}
+                      onClick={() => handleCategoryClick(cat)}
+                    >
+                      {Icon && <Icon size={14} />} {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Knowledge Base List */}
             <div className={styles.feed}>
-              {filtered.map(item => (
-                <div 
-                  key={item.id} 
-                  className={styles.feedItem}
-                  onClick={() => navigate(`/knowledge/hub/${item.id}`)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className={styles.feedIcon}>{item.icon}</div>
-                  <div className={styles.feedBody}>
-                    <div className={styles.feedTitle}>{item.title}</div>
-                    <div className={styles.feedDesc}>{item.desc}</div>
-                    <div className={styles.feedMeta}>
-                      <span className={styles.metaChip}><Users size={14} /> {item.subs} 订阅</span>
-                      <span className={styles.metaChip}><Database size={14} /> {item.contents} 内容</span>
-                    </div>
-                  </div>
+              {loading ? (
+                <div className={styles.loadingState}>加载中...</div>
+              ) : publicKbs.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>📚</div>
+                  <div className={styles.emptyText}>暂无公开知识库</div>
+                  <div className={styles.emptyHint}>快去创建并公开你的第一个知识库吧</div>
                 </div>
-              ))}
+              ) : (
+                publicKbs.map(kb => {
+                  const CategoryIcon = CATEGORY_ICONS[kb.category];
+                  return (
+                    <div 
+                      key={kb.id} 
+                      className={styles.feedItem}
+                      onClick={() => handleKBClick(kb.id)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className={styles.feedIcon}>
+                        <img src={kb.avatar} alt={kb.name} className={styles.kbAvatar} />
+                      </div>
+                      <div className={styles.feedBody}>
+                        <div className={styles.feedHeader}>
+                          <div className={styles.feedTitle}>{kb.name}</div>
+                          {CategoryIcon && (
+                            <div className={styles.categoryBadge}>
+                              <CategoryIcon size={12} />
+                              <span>{kb.category}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.feedDesc}>{kb.description || '暂无描述'}</div>
+                        <div className={styles.feedMeta}>
+                          <span className={styles.metaChip}>
+                            <Users size={12} /> {kb.subscribersCount || 0} 订阅
+                          </span>
+                          <span className={styles.metaChip}>
+                            <Database size={12} /> {kb.contents || 0} 文档
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
         </div>
@@ -187,5 +311,3 @@ export default function Knowledge() {
     </div>
   );
 }
-
-

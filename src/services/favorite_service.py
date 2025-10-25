@@ -2,7 +2,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from repositories.favorite_repository import FavoriteRepository
-from typing import List, Tuple, Optional
+from repositories.kb_repository import KnowledgeBaseRepository
+from repositories.document_repository import DocumentRepository
+from models.favorite import Favorite
+from models.knowledge_base import KnowledgeBase
+from typing import List, Tuple
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FavoriteService:
@@ -11,91 +18,137 @@ class FavoriteService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.favorite_repo = FavoriteRepository(db)
+        self.kb_repo = KnowledgeBaseRepository(db)
+        self.doc_repo = DocumentRepository(db)
     
-    async def list_favorites(
+    async def favorite_kb(
+        self,
+        kb_id: str,
+        user_id: str,
+        source: str = Favorite.SOURCE_MANUAL
+    ) -> dict:
+        """Favorite a knowledge base."""
+        # Verify KB exists and user has access (owned or public)
+        kb = await self.kb_repo.get_by_id(kb_id, user_id)
+        if not kb:
+            kb = await self.kb_repo.get_by_id_public(kb_id)
+            if not kb:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"error": {"code": "NOT_FOUND", "message": "Knowledge base not found or not accessible"}}
+                )
+        
+        await self.favorite_repo.add_favorite(
+            user_id,
+            Favorite.ITEM_TYPE_KB,
+            kb_id,
+            source
+        )
+        logger.info(f"User {user_id} favorited KB {kb_id} (source: {source})")
+        return {"success": True}
+    
+    async def unfavorite_kb(self, kb_id: str, user_id: str) -> dict:
+        """Unfavorite a knowledge base."""
+        success = await self.favorite_repo.remove_favorite(
+            user_id,
+            Favorite.ITEM_TYPE_KB,
+            kb_id
+        )
+        if success:
+            logger.info(f"User {user_id} unfavorited KB {kb_id}")
+        return {"success": success}
+    
+    async def favorite_document(
+        self,
+        doc_id: str,
+        kb_id: str,
+        user_id: str
+    ) -> dict:
+        """Favorite a document."""
+        # Verify user has access to the KB (owned or public)
+        kb = await self.kb_repo.get_by_id(kb_id, user_id)
+        if not kb:
+            kb = await self.kb_repo.get_by_id_public(kb_id)
+            if not kb:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"error": {"code": "NOT_FOUND", "message": "Knowledge base not found or not accessible"}}
+                )
+        
+        # Verify document exists in this KB
+        doc = await self.doc_repo.get_by_id(doc_id, kb_id)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "NOT_FOUND", "message": "Document not found"}}
+            )
+        
+        await self.favorite_repo.add_favorite(
+            user_id,
+            Favorite.ITEM_TYPE_DOC,
+            doc_id
+        )
+        logger.info(f"User {user_id} favorited document {doc_id}")
+        return {"success": True}
+    
+    async def unfavorite_document(self, doc_id: str, user_id: str) -> dict:
+        """Unfavorite a document."""
+        success = await self.favorite_repo.remove_favorite(
+            user_id,
+            Favorite.ITEM_TYPE_DOC,
+            doc_id
+        )
+        if success:
+            logger.info(f"User {user_id} unfavorited document {doc_id}")
+        return {"success": success}
+    
+    async def list_favorite_kbs(
         self,
         user_id: str,
-        favorite_type: Optional[str] = None,
-        query: Optional[str] = None,
         page: int = 1,
         page_size: int = 20
     ) -> Tuple[List[dict], int]:
-        """List favorites for user."""
-        favorites, total = await self.favorite_repo.list_favorites(
-            user_id, favorite_type, query, page, page_size
-        )
-        
-        # TODO: Enrich with actual paper/knowledge data from respective tables
-        items = []
-        for fav in favorites:
-            item = {
-                **fav.to_dict(),
-                "title": f"Mock {fav.type} {fav.target_id}",
-                "description": "Description from source table (TODO)",
-            }
-            items.append(item)
-        
-        return items, total
+        """List favorite knowledge bases."""
+        kbs, total = await self.favorite_repo.list_kb_favorites(user_id, page, page_size)
+        return [kb.to_dict(include_owner=True) for kb in kbs], total
     
-    async def create_favorite(
+    async def list_favorite_docs(
         self,
         user_id: str,
-        favorite_type: str,
-        target_id: str,
-        tags: List[str]
-    ) -> dict:
-        """Create a new favorite."""
-        # Check if already exists
-        existing = await self.favorite_repo.find_existing(user_id, favorite_type, target_id)
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={"error": {"code": "CONFLICT", "message": "Already favorited"}}
-            )
+        page: int = 1,
+        page_size: int = 20
+    ) -> Tuple[List[dict], int]:
+        """List favorite documents with KB info."""
+        docs, total = await self.favorite_repo.list_doc_favorites(user_id, page, page_size)
         
-        favorite = await self.favorite_repo.create(user_id, favorite_type, target_id, tags)
-        return {"id": str(favorite.id)}
+        # Enrich with KB info
+        result = []
+        for doc in docs:
+            doc_dict = doc.to_dict()
+            # Get KB info
+            kb = await self.db.get(KnowledgeBase, doc.kb_id)
+            if kb:
+                doc_dict["kbName"] = kb.name
+                doc_dict["kbAvatar"] = kb.avatar or "/kb.png"
+            result.append(doc_dict)
+        
+        return result, total
     
-    async def toggle_favorite(
+    async def check_favorites(
         self,
         user_id: str,
-        favorite_type: str,
-        target_id: str
+        items: List[dict]
     ) -> dict:
-        """Toggle favorite (add if not exists, remove if exists)."""
-        existing = await self.favorite_repo.find_existing(user_id, favorite_type, target_id)
-        
-        if existing:
-            await self.favorite_repo.delete(existing)
-            return {"id": None, "active": False}
-        else:
-            favorite = await self.favorite_repo.create(user_id, favorite_type, target_id, [])
-            return {"id": str(favorite.id), "active": True}
-    
-    async def update_favorite(
-        self,
-        favorite_id: str,
-        user_id: str,
-        tags: List[str]
-    ) -> dict:
-        """Update favorite tags."""
-        favorite = await self.favorite_repo.get_by_id(favorite_id, user_id)
-        if not favorite:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "NOT_FOUND", "message": "Favorite not found"}}
-            )
-        
-        await self.favorite_repo.update(favorite, tags)
-        return {"success": True}
-    
-    async def delete_favorite(self, favorite_id: str, user_id: str):
-        """Delete a favorite."""
-        favorite = await self.favorite_repo.get_by_id(favorite_id, user_id)
-        if not favorite:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "NOT_FOUND", "message": "Favorite not found"}}
-            )
-        await self.favorite_repo.delete(favorite)
-
+        """Batch check if items are favorited."""
+        result = {}
+        for item in items:
+            item_type = item.get("type")
+            item_id = item.get("id")
+            if item_type and item_id:
+                is_favorited = await self.favorite_repo.check_favorite(
+                    user_id,
+                    item_type,
+                    item_id
+                )
+                result[f"{item_type}:{item_id}"] = is_favorited
+        return result

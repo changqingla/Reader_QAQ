@@ -36,12 +36,17 @@ interface SidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   selectedChatId?: string;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export default function Sidebar({ onNewChat, onSelectChat, selectedChatId }: SidebarProps) {
+export default function Sidebar({ onNewChat, onSelectChat, selectedChatId, collapsed: controlledCollapsed, onToggleCollapse }: SidebarProps) {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
-  const [collapsed, setCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  
+  // 使用外部控制的 collapsed 或内部状态
+  const collapsed = controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const profilePopoverRef = useRef<HTMLDivElement | null>(null);
@@ -116,7 +121,17 @@ export default function Sidebar({ onNewChat, onSelectChat, selectedChatId }: Sid
     <div className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
       {/* Collapse control row */}
       <div className={styles.headerTop}>
-        <button className={styles.collapseBtn} onClick={() => setCollapsed(v => !v)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+        <button 
+          className={styles.collapseBtn} 
+          onClick={() => {
+            if (onToggleCollapse) {
+              onToggleCollapse();
+            } else {
+              setInternalCollapsed(v => !v);
+            }
+          }} 
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
           {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
         </button>
       </div>

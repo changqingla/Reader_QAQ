@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  readerpostgres:
+  reader_postgres:
     image: crpi-wh1i56a4x558rrhm.cn-hangzhou.personal.cr.aliyuncs.com/changqinga/postgres:16-alpine
     container_name: reader_postgres
     environment:
@@ -57,6 +57,25 @@ services:
       retries: 3
     networks:
       - reader_network
+
+  reader_nginx:
+    image: harbor.image-derivative.com:2443/sany/nginx:latest
+    container_name: reader_nginx
+    ports:
+      - "3005:80"  # 生产环境使用，前端不用 npm run dev
+    volumes:
+      # Nginx 配置文件
+      - ../nginx/nginx-docker.conf:/etc/nginx/conf.d/default.conf:ro
+      # 前端构建产物（在项目根目录的 dist）
+      - ../dist:/usr/share/nginx/html:ro
+    depends_on:
+      - reader_minio
+    extra_hosts:
+      # 允许 Nginx 访问宿主机上的后端服务
+      - "host.docker.internal:host-gateway"
+    networks:
+      - reader_network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

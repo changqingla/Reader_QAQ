@@ -108,7 +108,7 @@ pnpm dev
 
 ### 3. 访问应用
 
-- **前端**: http://localhost:5173
+- **前端**: http://localhost:3003
 - **后端 API**: http://localhost:8000
 - **API 文档**: http://localhost:8000/api/docs
 

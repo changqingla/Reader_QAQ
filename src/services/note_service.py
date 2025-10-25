@@ -42,16 +42,16 @@ class NoteService:
         self,
         user_id: str,
         title: str,
-        content: str,
-        folder: str,
+        content: Optional[str],
+        folder: Optional[str],
         tags: List[str]
     ) -> dict:
         """Create a new note."""
-        # TODO: Implement proper folder lookup/creation
-        folder_id = None
+        folder_id = folder if folder else None
+        note_content = content if content is not None else ""
         
         note = await self.note_repo.create(
-            user_id, title, content, folder_id, tags
+            user_id, title, note_content, folder_id, tags
         )
         return note.to_dict()
     
@@ -93,4 +93,45 @@ class NoteService:
             {"id": str(folder.id), "name": folder.name, "count": count}
             for folder, count in folders
         ]
+    
+    async def create_folder(self, user_id: str, name: str) -> dict:
+        """Create a new folder."""
+        folder = await self.folder_repo.create(user_id, name)
+        return {"id": str(folder.id), "name": folder.name}
+    
+    async def rename_folder(self, folder_id: str, user_id: str, name: str):
+        """Rename a folder."""
+        folder = await self.folder_repo.get_by_id(folder_id, user_id)
+        if not folder:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "NOT_FOUND", "message": "Folder not found"}}
+            )
+        
+        # 彩蛋：生活文件夹不允许重命名
+        if folder.name == '生活':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "FORBIDDEN", "message": "生活才是生命的真谛，不允许重命名"}}
+            )
+        
+        await self.folder_repo.update(folder, name)
+    
+    async def delete_folder(self, folder_id: str, user_id: str):
+        """Delete a folder."""
+        folder = await self.folder_repo.get_by_id(folder_id, user_id)
+        if not folder:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "NOT_FOUND", "message": "Folder not found"}}
+            )
+        
+        # 彩蛋：生活文件夹不允许删除
+        if folder.name == '生活':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "FORBIDDEN", "message": "生活才是生命的真谛，不允许删除"}}
+            )
+        
+        await self.folder_repo.delete(folder)
 

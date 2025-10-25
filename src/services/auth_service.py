@@ -2,6 +2,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from repositories.user_repository import UserRepository
+from repositories.note_repository import NoteFolderRepository
+from repositories.kb_repository import KnowledgeBaseRepository
 from utils.security import verify_password, get_password_hash, create_access_token
 from typing import Tuple
 
@@ -49,6 +51,21 @@ class AuthService:
         
         # Create user
         user = await self.user_repo.create(email, password_hash, name)
+        
+        # Create default folders for new user
+        folder_repo = NoteFolderRepository(self.db)
+        default_folders = ["学习", "工作", "生活"]
+        for folder_name in default_folders:
+            await folder_repo.create(str(user.id), folder_name)
+        
+        # Create default knowledge base for new user
+        kb_repo = KnowledgeBaseRepository(self.db)
+        await kb_repo.create(
+            owner_id=str(user.id),
+            name="我的知识库",
+            description="这是您的第一个知识库，您可以在这里上传和管理文档",
+            tags=[]
+        )
         
         # Create access token
         access_token = create_access_token(data={"sub": str(user.id)})

@@ -100,8 +100,8 @@ class FavoritesResponse(BaseModel):
 class CreateNoteRequest(BaseModel):
     """Create note request."""
     title: str
-    content: str
-    folder: str
+    content: Optional[str] = ""
+    folder: Optional[str] = None
     tags: List[str] = []
 
 

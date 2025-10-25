@@ -1,6 +1,7 @@
 """Note repository for database operations."""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
+from sqlalchemy.orm import selectinload
 from typing import Optional, List, Tuple
 from models.note import Note, NoteFolder
 
@@ -14,7 +15,9 @@ class NoteRepository:
     async def get_by_id(self, note_id: str, user_id: str) -> Optional[Note]:
         """Get note by ID for specific user."""
         result = await self.db.execute(
-            select(Note).where(Note.id == note_id, Note.user_id == user_id)
+            select(Note)
+            .options(selectinload(Note.folder))
+            .where(Note.id == note_id, Note.user_id == user_id)
         )
         return result.scalar_one_or_none()
     
@@ -27,7 +30,7 @@ class NoteRepository:
         page_size: int = 20
     ) -> Tuple[List[Note], int]:
         """List notes with pagination."""
-        stmt = select(Note).where(Note.user_id == user_id)
+        stmt = select(Note).options(selectinload(Note.folder)).where(Note.user_id == user_id)
         
         if folder_id:
             stmt = stmt.where(Note.folder_id == folder_id)
@@ -36,7 +39,18 @@ class NoteRepository:
             stmt = stmt.where(Note.title.ilike(f"%{query}%"))
         
         # Count total
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        count_stmt = select(func.count()).select_from(
+            select(Note).where(Note.user_id == user_id).subquery()
+        )
+        if folder_id:
+            count_stmt = select(func.count()).select_from(
+                select(Note).where(Note.user_id == user_id, Note.folder_id == folder_id).subquery()
+            )
+        if query:
+            count_stmt = select(func.count()).select_from(
+                select(Note).where(Note.user_id == user_id, Note.title.ilike(f"%{query}%")).subquery()
+            )
+        
         total = (await self.db.execute(count_stmt)).scalar()
         
         # Paginate
@@ -66,7 +80,7 @@ class NoteRepository:
         )
         self.db.add(note)
         await self.db.commit()
-        await self.db.refresh(note)
+        await self.db.refresh(note, ["folder"])
         return note
     
     async def update(self, note: Note, **kwargs) -> Note:
@@ -74,9 +88,20 @@ class NoteRepository:
         for key, value in kwargs.items():
             if hasattr(note, key) and value is not None:
                 setattr(note, key, value)
+        
+        # 在 commit 之前访问 folder 以避免 MissingGreenlet
+        folder_name = note.folder.name if note.folder else None
+        
         await self.db.commit()
         await self.db.refresh(note)
-        return note
+        
+        # 重新查询以正确加载关系
+        result = await self.db.execute(
+            select(Note)
+            .options(selectinload(Note.folder))
+            .where(Note.id == note.id)
+        )
+        return result.scalar_one()
     
     async def delete(self, note: Note):
         """Delete a note."""

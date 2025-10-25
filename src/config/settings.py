@@ -11,7 +11,12 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     API_PREFIX: str = "/api"
-    CORS_ORIGINS: List[str] = ["http://10.0.169.144:5173", "http://10.0.169.144:5173"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3003",
+        "http://10.0.169.144:3003",
+        "http://39.183.168.206:30003",  # 公网前端地址
+        "*"  # 允许所有来源（生产环境建议移除）
+    ]
     
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://reader:reader_dev_password@10.0.169.144:5433/reader_qaq"
@@ -22,7 +27,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://:reader_dev_password@10.0.169.144:6380/0"
     
     # MinIO/S3
-    MINIO_ENDPOINT: str = "10.0.169.144:8999"
+    MINIO_ENDPOINT: str = "10.0.169.144:8999"  # 内网地址，用于服务器上传下载
+    MINIO_PUBLIC_ENDPOINT: str = "10.0.169.144:8999"  # 开发环境直接访问；生产环境改为 "nginx"
+    # MINIO_PUBLIC_ENDPOINT: str = "nginx"
     MINIO_ACCESS_KEY: str = "reader"
     MINIO_SECRET_KEY: str = "reader_dev_password"
     MINIO_BUCKET: str = "reader-uploads"

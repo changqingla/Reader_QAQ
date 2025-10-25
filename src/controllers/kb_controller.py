@@ -1,5 +1,5 @@
 """Knowledge Base API endpoints."""
-from fastapi import APIRouter, Depends, Query, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Depends, Query, UploadFile, File, BackgroundTasks, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from config.database import get_db
@@ -43,7 +43,7 @@ async def create_knowledge_base(
         str(current_user.id),
         request["name"],
         request.get("description"),
-        request.get("tags", [])
+        request.get("category", "其它")
     )
 
 
@@ -71,6 +71,17 @@ async def delete_knowledge_base(
     return {"success": True}
 
 
+@router.get("/{kbId}/info")
+async def get_knowledge_base_info(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get knowledge base info (supports both owned and public KBs)."""
+    service = KnowledgeBaseService(db)
+    return await service.get_kb_info(kbId, str(current_user.id))
+
+
 @router.get("/quota")
 async def get_quota(
     current_user: User = Depends(get_current_user),
@@ -79,6 +90,35 @@ async def get_quota(
     """Get storage quota."""
     service = KnowledgeBaseService(db)
     return await service.get_quota(str(current_user.id))
+
+
+@router.post("/{kbId}/avatar")
+async def upload_kb_avatar(
+    kbId: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Upload knowledge base avatar image."""
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "VALIDATION_ERROR", "message": "Only image files are allowed"}}
+        )
+    
+    # Read file
+    file_data = await file.read()
+    
+    # Upload avatar
+    service = KnowledgeBaseService(db)
+    return await service.upload_avatar(
+        kbId,
+        str(current_user.id),
+        file_data,
+        file.filename,
+        file.content_type
+    )
 
 
 @router.post("/{kbId}/documents")
@@ -118,6 +158,18 @@ async def get_document_status(
     """Get document processing status."""
     service = DocumentService(db)
     return await service.get_document_status(docId, kbId, str(current_user.id))
+
+
+@router.get("/{kbId}/documents/{docId}/url")
+async def get_document_url(
+    kbId: str,
+    docId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get presigned URL for document file."""
+    service = DocumentService(db)
+    return await service.get_document_url(docId, kbId, str(current_user.id))
 
 
 @router.delete("/{kbId}/documents/{docId}")
@@ -161,3 +213,115 @@ async def chat_with_kb(
         "references": search_results["references"],
         "answer": "检索完成，找到相关内容（LLM问答功能暂未实现）"
     }
+
+
+# ============ Public Sharing & Subscription Features ============
+
+@router.post("/{kbId}/toggle-public")
+async def toggle_kb_public(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Toggle public status of a knowledge base."""
+    service = KnowledgeBaseService(db)
+    return await service.toggle_public(kbId, str(current_user.id))
+
+
+@router.post("/{kbId}/subscribe")
+async def subscribe_to_kb(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Subscribe to a public knowledge base."""
+    service = KnowledgeBaseService(db)
+    return await service.subscribe_kb(kbId, str(current_user.id))
+
+
+@router.delete("/{kbId}/subscribe")
+async def unsubscribe_from_kb(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Unsubscribe from a knowledge base."""
+    service = KnowledgeBaseService(db)
+    return await service.unsubscribe_kb(kbId, str(current_user.id))
+
+
+@router.get("/{kbId}/subscription-status")
+async def check_kb_subscription(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Check if user is subscribed to a knowledge base."""
+    service = KnowledgeBaseService(db)
+    return await service.check_subscription(kbId, str(current_user.id))
+
+
+@router.get("/subscriptions/list")
+async def list_my_subscriptions(
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List all knowledge bases subscribed by current user."""
+    service = KnowledgeBaseService(db)
+    items, total = await service.list_user_subscriptions(str(current_user.id), page, pageSize)
+    return {
+        "total": total,
+        "page": page,
+        "pageSize": pageSize,
+        "items": items
+    }
+
+
+@router.get("/public/list")
+async def list_public_knowledge_bases(
+    category: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List public knowledge bases (knowledge square)."""
+    service = KnowledgeBaseService(db)
+    items, total = await service.list_public_kbs(category, q, page, pageSize)
+    return {
+        "total": total,
+        "page": page,
+        "pageSize": pageSize,
+        "items": items
+    }
+
+
+@router.get("/featured/list")
+async def list_featured_knowledge_bases(
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(30, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List featured knowledge bases (2025年度精选)."""
+    service = KnowledgeBaseService(db)
+    items, total = await service.list_featured_kbs(page, pageSize)
+    return {
+        "total": total,
+        "page": page,
+        "pageSize": pageSize,
+        "items": items
+    }
+
+
+@router.get("/categories/stats")
+async def get_kb_categories_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get statistics for each knowledge base category."""
+    service = KnowledgeBaseService(db)
+    return {"categories": await service.get_categories_stats()}

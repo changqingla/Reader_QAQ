@@ -291,14 +291,18 @@ class DocumentService:
         page: int = 1,
         page_size: int = 20
     ) -> Tuple[List[dict], int]:
-        """List documents in knowledge base."""
-        # Verify KB ownership
+        """List documents in knowledge base (supports both owned and public KBs)."""
+        # Try to get as owner first
         kb = await self.kb_repo.get_by_id(kb_id, user_id)
+        
+        # If not owner, check if it's a public KB
         if not kb:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "NOT_FOUND", "message": "Knowledge base not found"}}
-            )
+            kb = await self.kb_repo.get_by_id_public(kb_id)
+            if not kb:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"error": {"code": "NOT_FOUND", "message": "Knowledge base not found or not accessible"}}
+                )
         
         documents, total = await self.doc_repo.list_documents(kb_id, page, page_size)
         return [doc.to_dict() for doc in documents], total
@@ -324,6 +328,46 @@ class DocumentService:
             "status": doc.status,
             "errorMessage": doc.error_message,
             "chunkCount": doc.chunk_count
+        }
+    
+    async def get_document_url(self, doc_id: str, kb_id: str, user_id: str) -> dict:
+        """Get presigned URL for document file (supports both owned and public KBs)."""
+        from utils.minio_client import get_file_url
+        
+        # Try to get as owner first
+        kb = await self.kb_repo.get_by_id(kb_id, user_id)
+        
+        # If not owner, check if it's a public KB
+        if not kb:
+            kb = await self.kb_repo.get_by_id_public(kb_id)
+            if not kb:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"error": {"code": "NOT_FOUND", "message": "Knowledge base not found or not accessible"}}
+                )
+        
+        doc = await self.doc_repo.get_by_id(doc_id, kb_id)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "NOT_FOUND", "message": "Document not found"}}
+            )
+        
+        if not doc.file_path:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "NOT_FOUND", "message": "Document file not found"}}
+            )
+        
+        # Extract object name from file_path
+        object_name = doc.file_path.replace(f"{settings.MINIO_BUCKET}/", "")
+        
+        # Generate presigned URL (valid for 1 hour)
+        file_url = get_file_url(object_name, expires_seconds=3600)
+        
+        return {
+            "url": file_url,
+            "name": doc.name
         }
     
     async def delete_document(self, doc_id: str, kb_id: str, user_id: str):

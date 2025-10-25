@@ -1,85 +1,108 @@
-"""Favorites API endpoints."""
+"""Favorite API endpoints."""
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
 from config.database import get_db
-from schemas.schemas import CreateFavoriteRequest, FavoritesResponse
-from services.favorite_service import FavoriteService
 from middlewares.auth import get_current_user
 from models.user import User
+from services.favorite_service import FavoriteService
 
 router = APIRouter(prefix="/favorites", tags=["Favorites"])
 
 
-@router.get("", response_model=FavoritesResponse)
-async def list_favorites(
-    type: Optional[str] = Query(None),
-    q: Optional[str] = Query(None),
+# ============ Knowledge Base Favorites ============
+
+@router.post("/kb/{kbId}")
+async def favorite_knowledge_base(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Favorite a knowledge base."""
+    service = FavoriteService(db)
+    return await service.favorite_kb(kbId, str(current_user.id))
+
+
+@router.delete("/kb/{kbId}")
+async def unfavorite_knowledge_base(
+    kbId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Unfavorite a knowledge base."""
+    service = FavoriteService(db)
+    return await service.unfavorite_kb(kbId, str(current_user.id))
+
+
+@router.get("/kb")
+async def list_favorite_knowledge_bases(
     page: int = Query(1, ge=1),
     pageSize: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """List favorites with optional filtering."""
+    """List favorite knowledge bases."""
     service = FavoriteService(db)
-    items, total = await service.list_favorites(
-        str(current_user.id), type, q, page, pageSize
-    )
-    return {"total": total, "page": page, "pageSize": pageSize, "items": items}
+    items, total = await service.list_favorite_kbs(str(current_user.id), page, pageSize)
+    return {
+        "total": total,
+        "page": page,
+        "pageSize": pageSize,
+        "items": items
+    }
 
 
-@router.post("")
-async def create_favorite(
-    request: CreateFavoriteRequest,
+# ============ Document Favorites ============
+
+@router.post("/document/{docId}")
+async def favorite_document(
+    docId: str,
+    kbId: str = Query(..., description="Knowledge base ID"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Add a new favorite."""
+    """Favorite a document."""
     service = FavoriteService(db)
-    return await service.create_favorite(
-        str(current_user.id),
-        request.type,
-        request.targetId,
-        request.tags
-    )
+    return await service.favorite_document(docId, kbId, str(current_user.id))
 
 
-@router.post(":toggle")
-async def toggle_favorite(
+@router.delete("/document/{docId}")
+async def unfavorite_document(
+    docId: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Unfavorite a document."""
+    service = FavoriteService(db)
+    return await service.unfavorite_document(docId, str(current_user.id))
+
+
+@router.get("/document")
+async def list_favorite_documents(
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """List favorite documents."""
+    service = FavoriteService(db)
+    items, total = await service.list_favorite_docs(str(current_user.id), page, pageSize)
+    return {
+        "total": total,
+        "page": page,
+        "pageSize": pageSize,
+        "items": items
+    }
+
+
+# ============ Batch Check ============
+
+@router.post("/check")
+async def check_favorites(
     request: dict,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Toggle favorite on/off."""
+    """Batch check if items are favorited."""
     service = FavoriteService(db)
-    return {"data": await service.toggle_favorite(
-        str(current_user.id),
-        request["type"],
-        request["targetId"]
-    )}
-
-
-@router.patch("/{favoriteId}")
-async def update_favorite(
-    favoriteId: str,
-    request: dict,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Update favorite tags."""
-    service = FavoriteService(db)
-    tags = request.get("tags", [])
-    return await service.update_favorite(favoriteId, str(current_user.id), tags)
-
-
-@router.delete("/{favoriteId}")
-async def delete_favorite(
-    favoriteId: str,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Delete a favorite."""
-    service = FavoriteService(db)
-    await service.delete_favorite(favoriteId, str(current_user.id))
-    return {"success": True}
-
+    items = request.get("items", [])
+    return await service.check_favorites(str(current_user.id), items)

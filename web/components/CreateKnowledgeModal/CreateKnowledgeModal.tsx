@@ -1,48 +1,46 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { KNOWLEDGE_CATEGORIES, CATEGORY_ICONS } from '@/constants/categories';
+import { useToast } from '@/hooks/useToast';
 import styles from './CreateKnowledgeModal.module.css';
 
 interface CreateKnowledgeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; description: string; tags: string[] }) => void;
+  onSubmit: (data: { name: string; description: string; category: string }) => void;
 }
 
 export default function CreateKnowledgeModal({ isOpen, onClose, onSubmit }: CreateKnowledgeModalProps) {
+  const toast = useToast();
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [tagsInput, setTagsInput] = React.useState('');
+  const [category, setCategory] = React.useState('其它');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
-      alert('请输入知识库名称');
+      toast.warning('请输入知识库名称');
       return;
     }
-
-    const tags = tagsInput
-      .split('/')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
 
     onSubmit({
       name: name.trim(),
       description: description.trim(),
-      tags
+      category
     });
 
     // 重置表单
     setName('');
     setDescription('');
-    setTagsInput('');
+    setCategory('其它');
     onClose();
   };
 
   const handleClose = () => {
     setName('');
     setDescription('');
-    setTagsInput('');
+    setCategory('其它');
     onClose();
   };
 
@@ -85,26 +83,23 @@ export default function CreateKnowledgeModal({ isOpen, onClose, onSubmit }: Crea
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>标签</label>
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="用 / 分隔标签，例如：技术/学习/AI"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-            />
-            {tagsInput && (
-              <div className={styles.tagsPreview}>
-                {tagsInput.split('/').map((tag, idx) => {
-                  const trimmed = tag.trim();
-                  return trimmed ? (
-                    <span key={idx} className={styles.tagChip}>
-                      {trimmed}
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
+            <label className={styles.label}>
+              分类 <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {KNOWLEDGE_CATEGORIES.map((cat) => {
+                const Icon = CATEGORY_ICONS[cat];
+                return (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                );
+              })}
+            </select>
           </div>
 
           <div className={styles.actions}>

@@ -2,7 +2,7 @@
 from minio import Minio
 from minio.error import S3Error
 from io import BytesIO
-from typing import Optional
+from datetime import timedelta
 from config.settings import settings
 import logging
 
@@ -109,14 +109,32 @@ def get_file_url(object_name: str, expires_seconds: int = 3600) -> str:
         expires_seconds: URL expiration time in seconds
     
     Returns:
-        Presigned URL
+        Presigned URL (using Nginx proxy path or public endpoint)
     """
     try:
+        # Convert seconds to timedelta
+        expires = timedelta(seconds=expires_seconds)
+        
         url = minio_client.presigned_get_object(
             settings.MINIO_BUCKET,
             object_name,
-            expires=expires_seconds
+            expires=expires
         )
+        
+        # 如果配置了公网地址，替换为公网访问地址
+        if settings.MINIO_PUBLIC_ENDPOINT and settings.MINIO_PUBLIC_ENDPOINT != settings.MINIO_ENDPOINT:
+            # 如果公网地址配置为 "nginx"，使用 Nginx 代理路径（不带签名）
+            if settings.MINIO_PUBLIC_ENDPOINT == "nginx":
+                # 生产环境通过 Nginx 代理访问，不需要签名
+                # 直接返回相对路径，Nginx 会代理到 MinIO
+                path_without_signature = f"/minio/{settings.MINIO_BUCKET}/{object_name}"
+                logger.info(f"Generated Nginx proxy URL (no signature) for {object_name}")
+                return path_without_signature
+            else:
+                # 使用配置的公网地址
+                url = url.replace(settings.MINIO_ENDPOINT, settings.MINIO_PUBLIC_ENDPOINT)
+                logger.info(f"Generated public URL for {object_name}")
+        
         return url
     
     except S3Error as e:
