@@ -35,10 +35,12 @@ class Document(Base):
         """Convert to dictionary."""
         return {
             "id": str(self.id),
+            "kbId": str(self.kb_id),
             "name": self.name,
             "size": self.size,
             "status": self.status,
             "chunkCount": self.chunk_count,
-            "createdAt": self.created_at.isoformat(),
+            "uploadedAt": self.created_at.isoformat(),
+            "createdAt": self.created_at.isoformat(),  # Keep for compatibility
         }
 

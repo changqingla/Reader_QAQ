@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar/Sidebar';
-import KnowledgeSidebar from '@/components/KnowledgeSidebar/KnowledgeSidebar';
+import KnowledgeSidebar, { KnowledgeSidebarRef } from '@/components/KnowledgeSidebar/KnowledgeSidebar';
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
 import EditKnowledgeModal from '@/components/EditKnowledgeModal/EditKnowledgeModal';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
@@ -64,6 +64,7 @@ export default function KnowledgeDetail() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const kbSidebarRef = useRef<KnowledgeSidebarRef>(null);
 
   // 格式化相对时间
   const formatRelativeTime = (dateString: string) => {
@@ -310,6 +311,8 @@ export default function KnowledgeDetail() {
       try {
         await kbAPI.subscribe(kbId);
         await loadCurrentKB();
+        // 刷新侧边栏的订阅列表
+        await kbSidebarRef.current?.refreshSubscriptions();
         toast.success('订阅成功！');
       } catch (error: any) {
         toast.error(error.message || '操作失败');
@@ -322,6 +325,8 @@ export default function KnowledgeDetail() {
     try {
       await kbAPI.unsubscribe(kbId);
       await loadCurrentKB();
+      // 刷新侧边栏的订阅列表
+      await kbSidebarRef.current?.refreshSubscriptions();
       toast.success('已取消订阅');
     } catch (error: any) {
       toast.error(error.message || '操作失败');
@@ -467,6 +472,7 @@ export default function KnowledgeDetail() {
         <div className={styles.contentArea}>
           {/* Knowledge Sidebar */}
           <KnowledgeSidebar
+            ref={kbSidebarRef}
             knowledgeBases={myKnowledgeBases}
             onKnowledgeBasesChange={loadKnowledgeBases}
             onCreateClick={() => setIsCreateModalOpen(true)}
@@ -476,8 +482,8 @@ export default function KnowledgeDetail() {
 
           {/* Center - KB Info & Upload */}
           <main className={styles.uploadSection}>
-            <div className={styles.uploadCard}>
-              {/* KB Header */}
+            {/* KB Info Card */}
+            <div className={styles.kbInfoCard}>
               <div className={styles.kbHeader}>
                 <div className={styles.kbInfo}>
                   <img 
@@ -506,6 +512,17 @@ export default function KnowledgeDetail() {
                 <div className={styles.kbActions}>
                   {currentKb?.isOwner ? (
                     <>
+                      {/* 上传按钮 - 只在有文档时显示 */}
+                      {documents.length > 0 && (
+                        <button 
+                          className={styles.iconBtn}
+                          onClick={() => fileInputRef.current?.click()}
+                          title="上传文件"
+                          disabled={uploading}
+                        >
+                          <Upload size={18} />
+                        </button>
+                      )}
                       <button 
                         className={styles.iconBtn}
                         onClick={handleTogglePublic}
@@ -536,8 +553,21 @@ export default function KnowledgeDetail() {
                 </div>
               </div>
 
-              {/* Upload Area - Only for owner */}
+              {/* Hidden file input - always present */}
               {currentKb?.isOwner && (
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.md,.txt,.docx,.xlsx,.pptx"
+                  onChange={handleFileChange}
+                  className={styles.hiddenInput}
+                  disabled={uploading}
+                />
+              )}
+
+              {/* Upload Area - Only show when no documents */}
+              {currentKb?.isOwner && documents.length === 0 && (
                 <>
                   <div
                     className={`${styles.dropzone} ${isDragging ? styles.dropzoneActive : ''}`}
@@ -556,15 +586,6 @@ export default function KnowledgeDetail() {
                   </div>
 
                   <div className={styles.uploadActions}>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept=".pdf,.md,.txt,.docx,.xlsx,.pptx"
-                      onChange={handleFileChange}
-                      className={styles.hiddenInput}
-                      disabled={uploading}
-                    />
                     <button 
                       className={styles.uploadButton} 
                       onClick={handleOpenPicker} 
@@ -575,11 +596,11 @@ export default function KnowledgeDetail() {
                   </div>
                 </>
               )}
+            </div>
 
-              {/* Document List */}
-              {documents.length > 0 && (
-                <div className={styles.fileList}>
-                  <div className={styles.fileListHeader}>文档列表</div>
+            {/* Document List - Flat design, not in card */}
+            {documents.length > 0 && (
+              <div className={styles.documentList}>
                   {documents.map((doc) => (
                     <div 
                       key={doc.id} 
@@ -627,9 +648,8 @@ export default function KnowledgeDetail() {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </main>
 
           {/* Right - Preview/Chat Area */}

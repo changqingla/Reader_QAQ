@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastProvider } from "@/hooks/useToast";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "@/pages/Home";
 import ChatDetail from "@/pages/ChatDetail";
 import Knowledge from "@/pages/Knowledge";
@@ -15,16 +16,19 @@ export default function App() {
     <ToastProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/chat/:chatId" element={<ChatDetail />} />
-          <Route path="/knowledge" element={<Knowledge />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/knowledge/:kbId" element={<KnowledgeDetail />} />
-          <Route path="/knowledge/hub/:hubId" element={<KnowledgeHubDetail />} />
+          {/* 公开路由 */}
           <Route path="/auth" element={<Auth />} />
-          <Route path="/knowledge/hub/:hubId/post/:postId" element={<PostDetail />} />
-          <Route path="/other" element={<div className="text-center text-xl">Other Page - Coming Soon</div>} />
+          
+          {/* 受保护的路由 - 需要登录 */}
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/chat/:chatId" element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
+          <Route path="/knowledge" element={<ProtectedRoute><Knowledge /></ProtectedRoute>} />
+          <Route path="/knowledge/:kbId" element={<ProtectedRoute><KnowledgeDetail /></ProtectedRoute>} />
+          <Route path="/knowledge/hub/:hubId" element={<ProtectedRoute><KnowledgeHubDetail /></ProtectedRoute>} />
+          <Route path="/knowledge/hub/:hubId/post/:postId" element={<ProtectedRoute><PostDetail /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+          <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+          <Route path="/other" element={<ProtectedRoute><div className="text-center text-xl">Other Page - Coming Soon</div></ProtectedRoute>} />
         </Routes>
       </Router>
     </ToastProvider>

@@ -2,7 +2,7 @@
  * 知识库侧边栏组件
  * 显示"我的知识库"和"订阅的知识库"列表
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import { Plus, Database, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { kbAPI } from '@/lib/api';
@@ -17,13 +17,17 @@ interface KnowledgeSidebarProps {
   onDeleteClick?: (kbId: string) => void;
 }
 
-export default function KnowledgeSidebar({
+export interface KnowledgeSidebarRef {
+  refreshSubscriptions: () => Promise<void>;
+}
+
+const KnowledgeSidebar = forwardRef<KnowledgeSidebarRef, KnowledgeSidebarProps>(({
   knowledgeBases,
   onKnowledgeBasesChange,
   onCreateClick,
   onEditClick,
   onDeleteClick
-}: KnowledgeSidebarProps) {
+}, ref) => {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
@@ -42,6 +46,11 @@ export default function KnowledgeSidebar({
       console.error('Failed to load subscriptions:', error);
     }
   };
+
+  // 暴露刷新订阅列表的方法给父组件
+  useImperativeHandle(ref, () => ({
+    refreshSubscriptions: loadSubscriptions
+  }));
 
   const handleKBClick = (kbId: string) => {
     navigate(`/knowledge/${kbId}`);
@@ -132,14 +141,22 @@ export default function KnowledgeSidebar({
         </div>
       </div>
 
-      {subscriptions.length > 0 && (
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>订阅的知识库</h3>
-          </div>
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>订阅的知识库</h3>
+        </div>
 
-          <div className={styles.list}>
-            {subscriptions.map((kb) => (
+        <div className={styles.list}>
+          {subscriptions.length === 0 ? (
+            <div className={styles.empty}>
+              <Database size={24} className={styles.emptyIcon} />
+              <p className={styles.emptyText}>还没有订阅知识库</p>
+              <button className={styles.emptyBtn} onClick={() => navigate('/knowledge')}>
+                去知识广场看看
+              </button>
+            </div>
+          ) : (
+            subscriptions.map((kb) => (
               <div
                 key={kb.id}
                 className={`${styles.item} ${isActive(kb.id) ? styles.active : ''}`}
@@ -151,12 +168,15 @@ export default function KnowledgeSidebar({
                   <div className={styles.itemMeta}>{kb.contents || 0} 文档</div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
-}
+});
 
+KnowledgeSidebar.displayName = 'KnowledgeSidebar';
+
+export default KnowledgeSidebar;
 
