@@ -10,6 +10,7 @@
   --bg: #f7f8fa;
   --bg-elev-1: #ffffff;
   --bg-elev-2: #f1f5f9;
+  --surface: #ffffff;
   --border: #e5e7eb;
   --text: #0b0b0b;
   --text-muted: #6b7280;
@@ -21,6 +22,7 @@ html.dark {
   --bg: #1a1a1a;
   --bg-elev-1: #171717;
   --bg-elev-2: #2d2d2d;
+  --surface: #252525;
   --border: #2d2d2d;
   --text: #ffffff;
   --text-muted: #888888;

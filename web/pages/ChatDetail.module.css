@@ -486,3 +486,83 @@ html.dark .inputPillActive { background: rgba(139,92,246,.12); border-color: #7c
     height: 32px;
   }
 }
+/* Quotes */
+.quotes {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quoteCard {
+  background: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid rgba(255, 255, 255, 0.5);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.assistantMessage .quoteCard {
+  background: rgba(102, 126, 234, 0.1);
+  border-left-color: #667eea;
+}
+
+.quoteSource {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.quotePage {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+/* Streaming Indicator */
+.streamingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.9em;
+  padding: 12px 16px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.loadingDots {
+  display: flex;
+  gap: 3px;
+}
+
+.loadingDots span {
+  animation: blink 1.4s infinite both;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.loadingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loadingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

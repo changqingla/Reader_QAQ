@@ -757,3 +757,257 @@
     padding: 20px 16px;
   }
 }
+
+/* Chat Messages */
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+}
+
+.messageItem {
+  display: flex;
+  gap: 12px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* 用户消息 - 右对齐 */
+.userMessageItem {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+/* AI消息 - 左对齐 */
+.aiMessageItem {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+/* 头像样式 */
+.userAvatar,
+.aiAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.userAvatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.userAvatar svg {
+  width: 16px;
+  height: 16px;
+}
+
+.aiAvatar {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.aiAvatar svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 消息内容容器 */
+.messageContentWrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 用户消息样式 - 右对齐 */
+.userMessageText {
+  background: rgba(102, 126, 234, 0.08);
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  display: inline-block;
+  max-width: 70%;
+  align-self: flex-end;
+}
+
+/* AI消息样式 - 左对齐 */
+.aiMessageText {
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  word-wrap: break-word;
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+/* 思考动画 */
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.thinkingDots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.thinkingText {
+  font-size: 13px;
+}
+
+/* Quotes */
+.quotes {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quoteCard {
+  background: rgba(255, 255, 255, 0.9);
+  border-left: 3px solid #667eea;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.quoteSource {
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.quotePage {
+  font-size: 0.85em;
+  color: #666;
+}
+
+/* Streaming Indicator */
+.streamingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #999;
+  font-size: 0.9em;
+  padding: 12px 16px;
+}
+
+.loadingDots {
+  display: flex;
+  gap: 3px;
+}
+
+.loadingDots span {
+  animation: blink 1.4s infinite both;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.loadingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loadingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mode Switch */
+.modeSwitch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modeSwitch button {
+  flex: 1;
+  padding: 8px 16px;
+  border: 1px solid #e1e8ed;
+  border-radius: 20px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.modeSwitch button:hover:not(:disabled) {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.modeSwitch button.modeActive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.modeSwitch button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

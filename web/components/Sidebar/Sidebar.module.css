@@ -173,6 +173,83 @@ html.dark .newChatButton {
   margin-top: 2px;
 }
 
+/* 聊天项元数据区域 */
+.chatMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 聊天项操作按钮 */
+.chatActions {
+  position: relative;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chatItem:hover .chatActions {
+  opacity: 1;
+}
+
+.menuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menuButton:hover {
+  background: var(--bg-elev-2);
+  color: var(--text);
+}
+
+.chatMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 140px;
+  overflow: hidden;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: var(--bg-elev-2);
+  color: #ef4444;
+}
+
+.menuItem svg {
+  flex-shrink: 0;
+}
+
 .contentSection {
   margin-bottom: 20px;
 }

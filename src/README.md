@@ -58,10 +58,10 @@ pip install -r requirements.txt
 python main.py
 ```
 
-API 服务将运行在：http://localhost:8000
+API 服务将运行在：http://localhost:13000
 
-- **API 文档**：http://localhost:8000/api/docs
-- **ReDoc**：http://localhost:8000/api/redoc
+- **API 文档**：http://localhost:13000/api/docs
+- **ReDoc**：http://localhost:13000/api/redoc
 
 ## ✅ 已实现功能
 

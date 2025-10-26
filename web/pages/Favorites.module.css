@@ -561,8 +561,8 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: #fafbfc;
+  gap: 20px;
+  background: var(--bg);
 }
 
 .chatEmpty {
@@ -606,8 +606,10 @@
   font-weight: 500;
 }
 
-.message {
+/* 新的聊天UI - 和 Home 页面一致 */
+.messageItem {
   display: flex;
+  gap: 12px;
   animation: slideIn 0.3s ease;
 }
 
@@ -622,36 +624,128 @@
   }
 }
 
-.messageUser {
-  justify-content: flex-end;
-}
-
-.messageAssistant {
+.userMessageItem {
+  flex-direction: row-reverse;
   justify-content: flex-start;
 }
 
-.messageContent {
-  max-width: 75%;
-  padding: 12px 16px;
+.aiMessageItem {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+/* 头像样式 */
+.userAvatar,
+.aiAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.userAvatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.userAvatar svg {
+  width: 16px;
+  height: 16px;
+}
+
+.aiAvatar {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.aiAvatar svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 消息内容容器 */
+.messageContentWrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 用户消息样式 */
+.userMessageText {
+  background: rgba(102, 126, 234, 0.08);
+  padding: 10px 14px;
   border-radius: 16px;
   font-size: 14px;
   line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
   word-wrap: break-word;
+  display: inline-block;
+  max-width: 70%;
+  align-self: flex-end;
 }
 
-.messageUser .messageContent {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: #ffffff;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+/* AI消息样式 */
+.aiMessageText {
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  word-wrap: break-word;
+  align-self: flex-start;
+  max-width: 100%;
 }
 
-.messageAssistant .messageContent {
-  background: #ffffff;
-  color: #1e293b;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* 思考动画 */
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.thinkingDots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.thinkingText {
+  font-size: 13px;
 }
 
 .chatInputArea {
@@ -740,5 +834,70 @@
   .chatSectionFull {
     flex: none;
     height: 50%;
+  }
+}
+
+/* Message Quotes */
+.msgQuotes {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quoteItem {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.messageAssistant .quoteItem {
+  background: rgba(102, 126, 234, 0.1);
+  border-left-color: #667eea;
+}
+
+/* Streaming Message */
+.streamingMsg {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: var(--text-muted);
+  font-size: 0.9em;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.dot {
+  animation: blink 1.4s infinite both;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

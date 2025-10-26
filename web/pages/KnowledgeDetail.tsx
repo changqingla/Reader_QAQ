@@ -5,20 +5,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar/Sidebar';
+import OptimizedMarkdown from '@/components/OptimizedMarkdown';
 import KnowledgeSidebar, { KnowledgeSidebarRef } from '@/components/KnowledgeSidebar/KnowledgeSidebar';
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
 import EditKnowledgeModal from '@/components/EditKnowledgeModal/EditKnowledgeModal';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import { kbAPI, favoriteAPI } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
+import { useRAGChat } from '@/hooks/useRAGChat';
 import { 
   Upload, 
   FileText, 
   Globe,
   GlobeLock,
   Users,
+  User,
   UserPlus,
   UserMinus,
+  Sparkles,
   Star,
   Send,
   MessageCircle,
@@ -53,10 +57,19 @@ export default function KnowledgeDetail() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [quota, setQuota] = useState({ usedBytes: 0, limitBytes: 500000000000 });
-  const [askInput, setAskInput] = useState('');
   
   // Favorite State
   const [favoriteDocIds, setFavoriteDocIds] = useState<Set<string>>(new Set());
+  
+  // Chat State
+  const [chatInput, setChatInput] = useState('');
+  
+  // RAG Chat Hook - 知识库页面固定使用 deep 模式
+  const { messages, isStreaming, sendMessage } = useRAGChat({
+    kbId: kbId,
+    mode: 'deep',
+    onError: (error) => toast.error(`对话错误: ${error}`)
+  });
   
   // PDF Preview State
   const [previewDoc, setPreviewDoc] = useState<any>(null);
@@ -582,7 +595,7 @@ export default function KnowledgeDetail() {
                   </div>
 
                   <div className={styles.fileTypeHint}>
-                    支持 pdf、md、txt、docx、xlsx、pptx 等，单个文件最大 100MB
+                    上传pdf格式文件，单个文件最大 100MB
                   </div>
 
                   <div className={styles.uploadActions}>
@@ -709,10 +722,59 @@ export default function KnowledgeDetail() {
                 </div>
 
                 <div className={styles.chatContent}>
-                  <div className={styles.chatEmpty}>
-                    <MessageCircle size={48} className={styles.chatEmptyIcon} />
-                    <p className={styles.chatEmptyText}>开始对话，探索知识库的内容</p>
-                  </div>
+                  {messages.length === 0 ? (
+                    <div className={styles.chatEmpty}>
+                      <MessageCircle size={48} className={styles.chatEmptyIcon} />
+                      <p className={styles.chatEmptyText}>开始对话，探索知识库的内容</p>
+                    </div>
+                  ) : (
+                    <div className={styles.chatMessages}>
+                      {messages.map((msg, index) => (
+                        <div 
+                          key={msg.id} 
+                          className={`${styles.messageItem} ${msg.role === 'user' ? styles.userMessageItem : styles.aiMessageItem}`}
+                        >
+                          <div className={msg.role === 'user' ? styles.userAvatar : styles.aiAvatar}>
+                            {msg.role === 'user' ? <User size={16} /> : <Sparkles size={16} />}
+                          </div>
+                          <div className={styles.messageContentWrapper}>
+                            {msg.role === 'assistant' && !msg.content && isStreaming && index === messages.length - 1 ? (
+                              <div className={styles.thinking}>
+                                <div className={styles.thinkingDots}>
+                                  <span className={styles.dot}></span>
+                                  <span className={styles.dot}></span>
+                                  <span className={styles.dot}></span>
+                                </div>
+                                <span className={styles.thinkingText}>正在思考...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <div className={msg.role === 'user' ? styles.userMessageText : styles.aiMessageText}>
+                                  {msg.role === 'user' ? (
+                                    msg.content
+                                  ) : (
+                                    <OptimizedMarkdown>
+                                      {msg.content}
+                                    </OptimizedMarkdown>
+                                  )}
+                                </div>
+                                {msg.quotes && msg.quotes.length > 0 && (
+                                  <div className={styles.quotes}>
+                                    {msg.quotes.map((quote: any, i: number) => (
+                                      <div key={i} className={styles.quoteCard}>
+                                        <div className={styles.quoteSource}>📄 {quote.source}</div>
+                                        {quote.page && <div className={styles.quotePage}>第 {quote.page} 页</div>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.chatInputSection}>
@@ -720,10 +782,27 @@ export default function KnowledgeDetail() {
                     <input 
                       className={styles.chatInput} 
                       placeholder="可对本知识库进行提问..." 
-                      value={askInput}
-                      onChange={(e) => setAskInput(e.target.value)}
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey && !isStreaming && chatInput.trim()) {
+                          e.preventDefault();
+                          sendMessage(chatInput);
+                          setChatInput('');
+                        }
+                      }}
+                      disabled={isStreaming}
                     />
-                    <button className={styles.sendButton}>
+                    <button 
+                      className={styles.sendButton}
+                      onClick={() => {
+                        if (chatInput.trim() && !isStreaming) {
+                          sendMessage(chatInput);
+                          setChatInput('');
+                        }
+                      }}
+                      disabled={!chatInput.trim() || isStreaming}
+                    >
                       <Send size={18} />
                     </button>
                   </div>

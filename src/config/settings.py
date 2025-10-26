@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     
     # MinIO/S3
     MINIO_ENDPOINT: str = "10.0.169.144:8999"  # 内网地址，用于服务器上传下载
-    MINIO_PUBLIC_ENDPOINT: str = "10.0.169.144:8999"  # 开发环境直接访问；生产环境改为 "nginx"
-    # MINIO_PUBLIC_ENDPOINT: str = "nginx"
+    # 生产环境使用 "nginx" 模式，通过 Nginx 代理访问（不需要签名）
+    MINIO_PUBLIC_ENDPOINT: str = "nginx"
     MINIO_ACCESS_KEY: str = "reader"
     MINIO_SECRET_KEY: str = "reader_dev_password"
     MINIO_BUCKET: str = "reader-uploads"

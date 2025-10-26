@@ -3,9 +3,11 @@
  * 完整实现文件夹管理、笔记CRUD、自动保存
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar/Sidebar';
-import { noteAPI } from '@/lib/api';
+import { api, noteAPI } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
+import { useChatSessions } from '@/hooks/useChatSessions';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import { 
   Search, 
@@ -41,6 +43,8 @@ const PROTECTED_FOLDER = '生活';
 
 export default function Notes() {
   const toast = useToast();
+  const navigate = useNavigate();
+  const { chatSessions, refreshSessions } = useChatSessions();
   
   // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -307,6 +311,26 @@ export default function Notes() {
     }
   };
 
+  // 聊天处理函数
+  const handleNewChat = () => {
+    navigate('/');
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    navigate('/');
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await api.deleteChatSession(chatId);
+      await refreshSessions();
+      toast.success('对话已删除');
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      toast.error('删除对话失败');
+    }
+  };
+
   return (
     <div className={styles.page}>
       {isMobile && isSidebarOpen && (
@@ -314,7 +338,12 @@ export default function Notes() {
       )}
 
       <div className={`${styles.sidebarContainer} ${isMobile && isSidebarOpen ? styles.open : ''}`}>
-        <Sidebar onNewChat={() => {}} onSelectChat={() => {}} selectedChatId={undefined} />
+        <Sidebar 
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          chats={chatSessions}
+        />
       </div>
 
       <ConfirmModal

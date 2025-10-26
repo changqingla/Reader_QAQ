@@ -8,9 +8,10 @@ import Sidebar from '@/components/Sidebar/Sidebar';
 import KnowledgeSidebar from '@/components/KnowledgeSidebar/KnowledgeSidebar';
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
 import EditKnowledgeModal from '@/components/EditKnowledgeModal/EditKnowledgeModal';
-import { kbAPI } from '@/lib/api';
+import { api, kbAPI } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
+import { useChatSessions } from '@/hooks/useChatSessions';
 import { KNOWLEDGE_CATEGORIES, CATEGORY_ICONS } from '@/constants/categories';
 import styles from './Knowledge.module.css';
 
@@ -20,6 +21,7 @@ const DEFAULT_CATEGORIES = ['工学', '经济学', '管理学', '文学', '历�
 export default function Knowledge() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { chatSessions, refreshSessions } = useChatSessions();
   
   // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -139,6 +141,26 @@ export default function Knowledge() {
     return KNOWLEDGE_CATEGORIES.filter(cat => !DEFAULT_CATEGORIES.includes(cat));
   }, []);
 
+  // 聊天处理函数
+  const handleNewChat = () => {
+    navigate('/');
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    navigate('/');
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await api.deleteChatSession(chatId);
+      await refreshSessions();
+      toast.success('对话已删除');
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      toast.error('删除对话失败');
+    }
+  };
+
   return (
     <div className={styles.page}>
       {isMobile && isSidebarOpen && (
@@ -146,7 +168,12 @@ export default function Knowledge() {
       )}
 
       <div className={`${styles.sidebarContainer} ${isMobile && isSidebarOpen ? styles.open : ''}`}>
-        <Sidebar onNewChat={() => {}} onSelectChat={() => {}} selectedChatId={undefined} />
+        <Sidebar 
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          chats={chatSessions}
+        />
       </div>
 
       {/* Modals */}

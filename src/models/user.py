@@ -1,6 +1,7 @@
 """User database model."""
 from sqlalchemy import Column, String, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from config.database import Base
 import uuid
 
@@ -16,6 +17,9 @@ class User(Base):
     avatar = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # 关系
+    chat_sessions = relationship("ChatSession", back_populates="user", cascade="all, delete-orphan")
     
     def to_dict(self):
         """Convert to dictionary."""

@@ -1,5 +1,10 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar/Sidebar';
+import OptimizedMarkdown from '@/components/OptimizedMarkdown';
+import { useRAGChat } from '@/hooks/useRAGChat';
+import { useToast } from '@/hooks/useToast';
+import { useChatSessions } from '@/hooks/useChatSessions';
+import { api } from '@/lib/api';
 import { 
   Search, 
   Plus, 
@@ -12,6 +17,7 @@ import {
   Clock,
   FileText,
   Users,
+  User,
   Database,
   Sparkles,
   Globe,
@@ -111,13 +117,22 @@ const mockPosts: Post[] = [
 
 export default function KnowledgeHubDetail() {
   const navigate = useNavigate();
+  const toast = useToast();
   const { hubId } = useParams();
+  const { chatSessions, refreshSessions } = useChatSessions();
   const [selectedChatId, setSelectedChatId] = React.useState<string | undefined>();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [askInput, setAskInput] = React.useState('');
+  const [chatInput, setChatInput] = React.useState('');
   const [selectedPostId, setSelectedPostId] = React.useState<string | null>(null);
+  
+  // RAG Chat Hook
+  const { messages, isStreaming, sendMessage } = useRAGChat({
+    kbId: hubId,
+    mode: 'deep',
+    onError: (error) => toast.error(`对话错误: ${error}`)
+  });
 
   React.useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -132,6 +147,26 @@ export default function KnowledgeHubDetail() {
     icon: '💻',
     subscribers: 86,
     contents: 311
+  };
+
+  // 聊天处理函数
+  const handleNewChat = () => {
+    navigate('/');
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    navigate('/');
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await api.deleteChatSession(chatId);
+      await refreshSessions();
+      toast.success('对话已删除');
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      toast.error('删除对话失败');
+    }
   };
 
   // 简单的文档内容映射（示例）
@@ -158,9 +193,10 @@ export default function KnowledgeHubDetail() {
       {/* App Sidebar */}
       <div className={`${styles.sidebarContainer} ${isMobile && isSidebarOpen ? styles.open : ''}`}>
         <Sidebar 
-          onNewChat={() => setSelectedChatId(undefined)} 
-          onSelectChat={(id) => setSelectedChatId(id)} 
-          selectedChatId={selectedChatId} 
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          chats={chatSessions}
         />
       </div>
 
@@ -298,26 +334,86 @@ export default function KnowledgeHubDetail() {
                   <span>提问本知识库</span>
                 </div>
                 <div className={styles.chatContent}>
-                  <div className={styles.chatWelcome}>
-                    <p className={styles.welcomeText}>Hi，你可以看看向本知识库：</p>
-                    <div className={styles.suggestions}>
-                      <button className={styles.suggestionItem} onClick={() => setAskInput('微星 GS65 现在的性价比多少？')}>微星 GS65 现在的性价比多少？</button>
-                      <button className={styles.suggestionItem} onClick={() => setAskInput('白色外壳容易掉色吗？')}>白色外壳容易掉色吗？</button>
-                      <button className={styles.suggestionItem} onClick={() => setAskInput('小米笔记本 Pro X15 的键盘手感如何？')}>小米笔记本 Pro X15的键盘手感如何？</button>
+                  {messages.length === 0 ? (
+                    <div className={styles.chatWelcome}>
+                      <p className={styles.welcomeText}>Hi，你可以向本知识库提问：</p>
+                      <div className={styles.suggestions}>
+                        <button className={styles.suggestionItem} onClick={() => setChatInput('微星 GS65 现在的性价比多少？')}>微星 GS65 现在的性价比多少？</button>
+                        <button className={styles.suggestionItem} onClick={() => setChatInput('白色外壳容易掉色吗？')}>白色外壳容易掉色吗？</button>
+                        <button className={styles.suggestionItem} onClick={() => setChatInput('小米笔记本 Pro X15 的键盘手感如何？')}>小米笔记本 Pro X15的键盘手感如何？</button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className={styles.chatMessages}>
+                      {messages.map((msg, index) => (
+                        <div 
+                          key={msg.id}
+                          className={`${styles.messageItem} ${msg.role === 'user' ? styles.userMessageItem : styles.aiMessageItem}`}
+                        >
+                          <div className={msg.role === 'user' ? styles.userAvatar : styles.aiAvatar}>
+                            {msg.role === 'user' ? <User size={16} /> : <Sparkles size={16} />}
+                          </div>
+                          <div className={styles.messageContentWrapper}>
+                            {msg.role === 'assistant' && !msg.content && isStreaming && index === messages.length - 1 ? (
+                              <div className={styles.thinking}>
+                                <div className={styles.thinkingDots}>
+                                  <span className={styles.dot}></span>
+                                  <span className={styles.dot}></span>
+                                  <span className={styles.dot}></span>
+                                </div>
+                                <span className={styles.thinkingText}>正在思考...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <div className={msg.role === 'user' ? styles.userMessageText : styles.aiMessageText}>
+                                  {msg.role === 'user' ? (
+                                    msg.content
+                                  ) : (
+                                    <OptimizedMarkdown>
+                                      {msg.content}
+                                    </OptimizedMarkdown>
+                                  )}
+                                </div>
+                                {msg.quotes && msg.quotes.length > 0 && (
+                                  <div className={styles.messageQuotes}>
+                                    {msg.quotes.map((quote: any, i: number) => (
+                                      <div key={i} className={styles.quoteBox}>
+                                        📄 {quote.source} {quote.page && `(第${quote.page}页)`}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className={styles.chatInput}>
                   <div className={styles.quickActions}>
-                    <button className={styles.quickBtn} onClick={() => setAskInput('请结合本知识库生成一段观点洞察：')}>
+                    <button 
+                      className={styles.quickBtn} 
+                      onClick={() => setChatInput('请结合本知识库生成一段观点洞察：')}
+                      disabled={isStreaming}
+                    >
                       <Sparkles size={14} />
                       观点洞察
                     </button>
-                    <button className={styles.quickBtn} onClick={() => setAskInput('请按时间给出关键事件脉络：')}>
+                    <button 
+                      className={styles.quickBtn} 
+                      onClick={() => setChatInput('请按时间给出关键事件脉络：')}
+                      disabled={isStreaming}
+                    >
                       <Clock size={14} />
                       时间脉络
                     </button>
-                    <button className={styles.quickBtn} onClick={() => setAskInput('请为以下网页生成摘要：')}>
+                    <button 
+                      className={styles.quickBtn} 
+                      onClick={() => setChatInput('请为以下网页生成摘要：')}
+                      disabled={isStreaming}
+                    >
                       <Globe size={14} />
                       网页摘要
                     </button>
@@ -326,10 +422,26 @@ export default function KnowledgeHubDetail() {
                     <input 
                       className={styles.textInput}
                       placeholder="可对本知识库进行提问..."
-                      value={askInput}
-                      onChange={(e) => setAskInput(e.target.value)}
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !isStreaming && chatInput.trim()) {
+                          sendMessage(chatInput);
+                          setChatInput('');
+                        }
+                      }}
+                      disabled={isStreaming}
                     />
-                    <button className={styles.sendBtn} onClick={() => { if (askInput.trim()) { console.log('Ask:', askInput); setAskInput(''); } }}>
+                    <button 
+                      className={styles.sendBtn} 
+                      onClick={() => { 
+                        if (chatInput.trim() && !isStreaming) { 
+                          sendMessage(chatInput); 
+                          setChatInput(''); 
+                        } 
+                      }}
+                      disabled={!chatInput.trim() || isStreaming}
+                    >
                       <Send size={18} />
                     </button>
                   </div>
@@ -345,4 +457,3 @@ export default function KnowledgeHubDetail() {
     </div>
   );
 }
-

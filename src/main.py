@@ -10,7 +10,8 @@ from config.redis import get_redis_client, close_redis
 from utils.external_services import close_http_client
 
 # Import controllers
-from controllers import auth_controller, note_controller, favorite_controller, kb_controller, hub_controller
+from controllers import auth_controller, note_controller, favorite_controller, kb_controller, hub_controller, chat_controller
+from rag import rag_router
 
 
 @asynccontextmanager
@@ -87,6 +88,8 @@ app.include_router(note_controller.router, prefix=settings.API_PREFIX)
 app.include_router(favorite_controller.router, prefix=settings.API_PREFIX)
 app.include_router(kb_controller.router, prefix=settings.API_PREFIX)
 app.include_router(hub_controller.router, prefix=settings.API_PREFIX)
+app.include_router(chat_controller.router, prefix=settings.API_PREFIX)
+app.include_router(rag_router, prefix=settings.API_PREFIX)
 
 
 if __name__ == "__main__":
@@ -94,7 +97,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=13000,
         reload=settings.DEBUG
     )
-

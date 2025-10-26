@@ -8,6 +8,8 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,
+    pool_pre_ping=True,  # 检查连接是否有效，无效则重新创建
+    pool_recycle=3600,   # 每小时回收连接，防止数据库服务器关闭长时间空闲连接
     echo=settings.DEBUG,
 )
 

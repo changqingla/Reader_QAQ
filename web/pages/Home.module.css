@@ -1,18 +1,26 @@
+/* ============================================
+   Reader QAQ - 主页设计 v3
+   设计理念：极简、优雅、专业
+   ============================================ */
+
+/* ----- 基础布局 ----- */
 .home {
   display: flex;
   height: 100vh;
-  background-color: #1a1a1a;
-  overflow: hidden;
+  background: var(--bg);
 }
 
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   z-index: 999;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .sidebarContainer {
@@ -24,7 +32,40 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  overflow: hidden;
+}
+
+.mobileHeader {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.menuButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menuButton:hover {
+  background: var(--bg);
+}
+
+.mobileTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .chatContainer {
@@ -34,22 +75,568 @@
   overflow: hidden;
 }
 
-/* Mobile Responsive */
+/* ============================================
+   加载状态
+   ============================================ */
+
+.loadingContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(102, 126, 234, 0.1);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ============================================
+   欢迎屏幕
+   ============================================ */
+
+.welcomeContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 40px;
+  overflow-y: auto;
+}
+
+/* 主标题 */
+.welcomeTitle {
+  font-size: 48px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 48px;
+  text-align: center;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 700px;
+  margin-bottom: 40px;
+}
+
+.suggestionTag {
+  padding: 10px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.suggestionTag:hover:not(:disabled) {
+  background: var(--bg-elev-1);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
+
+.suggestionTag:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   输入区域 - 重新布局
+   ============================================ */
+
+.inputSection {
+  flex-shrink: 0;
+  padding: 20px 24px 24px;
+  background: var(--bg);
+}
+
+.inputWrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 模式切换 - 输入框下方左对齐 */
+.modeSwitch {
+  display: flex;
+  gap: 8px;
+}
+
+.modeButton {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.modeButton:hover:not(:disabled):not(.active) {
+  background: var(--bg-elev-1);
+  border-color: var(--text-muted);
+}
+
+.modeButton.active {
+  background: rgba(102, 126, 234, 0.12);
+  color: #667eea;
+  border-color: rgba(102, 126, 234, 0.6);
+}
+
+.modeButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 输入框 */
+.inputBox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.inputBox:focus-within {
+  border-color: var(--text-muted);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  resize: none;
+  min-height: 24px;
+  max-height: 200px;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inputActions {
+  display: flex;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.iconButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.sendButton {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.sendButton:hover:not(:disabled) {
+  background: var(--text);
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.sendButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sendButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
+/* ============================================
+   对话界面
+   ============================================ */
+
+.messagesArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 0;
+}
+
+.messageGroup {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.messageItem {
+  display: flex;
+  gap: 16px;
+  animation: messageIn 0.3s ease;
+}
+
+/* 用户消息 - 右对齐 */
+.userMessageItem {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+/* AI消息 - 左对齐 */
+.aiMessageItem {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 头像 */
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.userAvatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.aiAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--text);
+  color: var(--bg);
+}
+
+.aiAvatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 消息内容 */
+.messageContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 用户消息样式 - 气泡样式，右对齐 */
+.userMessageText {
+  background: rgba(102, 126, 234, 0.08);
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 70%;
+  align-self: flex-end;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* AI消息样式 - 左对齐 */
+.aiMessageText {
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+  word-wrap: break-word;
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+/* 引用卡片 */
+.quotes {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quote {
+  padding: 12px 16px;
+  background: var(--bg-elev-1);
+  border-left: 3px solid rgba(102, 126, 234, 0.6);
+  border-radius: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.quote:hover {
+  background: var(--bg-elev-2);
+  border-left-color: rgba(102, 126, 234, 1);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.quoteSource {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quotePage {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* 思考指示器 */
+.thinking {
+  display: flex;
+  align-items: center;
+}
+
+.thinkingDots {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-elev-1);
+  border-radius: 16px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation: wave 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(1) { animation-delay: 0s; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes wave {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+.thinkingText {
+  display: none;
+}
+
+/* ============================================
+   响应式设计
+   ============================================ */
+
 @media (max-width: 768px) {
+  .mobileHeader {
+    display: flex;
+  }
+
   .sidebarContainer {
     position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
+    inset: 0;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    z-index: 1001;
   }
   
   .sidebarContainer.open {
     transform: translateX(0);
   }
-  
-  .mainContent {
-    width: 100%;
+
+  .welcomeContent {
+    padding: 40px 20px 24px;
   }
+
+  .welcomeTitle {
+    font-size: 36px;
+    margin-bottom: 32px;
+  }
+
+  .suggestions {
+    gap: 8px;
+  }
+
+  .suggestionTag {
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .inputSection {
+    padding: 16px;
+  }
+
+  .messagesArea {
+    padding: 24px 0;
+  }
+
+  .messageGroup {
+    padding: 0 20px;
+    gap: 24px;
+  }
+
+  .messageItem {
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .userMessageText {
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcomeTitle {
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  .messagesArea {
+    padding: 20px 0;
+  }
+
+  .messageGroup {
+    padding: 0 16px;
+    gap: 20px;
+  }
+
+  .input {
+    font-size: 16px; /* 防止 iOS 缩放 */
+  }
+
+  .modeSwitch {
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================
+   滚动条优化
+   ============================================ */
+
+.messagesArea::-webkit-scrollbar,
+.welcomeContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messagesArea::-webkit-scrollbar-track,
+.welcomeContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messagesArea::-webkit-scrollbar-thumb,
+.welcomeContent::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.messagesArea::-webkit-scrollbar-thumb:hover,
+.welcomeContent::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

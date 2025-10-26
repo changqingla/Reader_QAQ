@@ -2,7 +2,7 @@
 // API 基础配置
 // 开发环境使用相对路径，通过 Vite 代理
 // 生产环境使用环境变量配置的完整 URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // 通用请求函数
 async function request<T>(
@@ -525,3 +525,119 @@ export const favoriteAPI = {
   },
 };
 
+// ==================== 聊天会话相关 API ====================
+export const chatAPI = {
+
+  /**
+   * 获取用户的所有聊天会话
+   */
+  async listChatSessions(page: number = 1, pageSize: number = 50) {
+    const params = new URLSearchParams({ 
+      page: page.toString(), 
+      pageSize: pageSize.toString() 
+    });
+    return request<{ 
+      sessions: Array<{
+        id: string;
+        title: string;
+        lastMessage: string;
+        timestamp: string;
+        createdAt: string;
+        updatedAt: string;
+        messageCount: number;
+      }>;
+      page: number;
+      pageSize: number;
+    }>(`/chat/sessions?${params}`, { method: 'GET' });
+  },
+
+  /**
+   * 创建新的聊天会话
+   */
+  async createChatSession(firstMessage: string) {
+    return request<{
+      id: string;
+      title: string;
+      lastMessage: string;
+      timestamp: string;
+      createdAt: string;
+      updatedAt: string;
+      messageCount: number;
+    }>('/chat/sessions', {
+      method: 'POST',
+      body: JSON.stringify({ first_message: firstMessage }),
+    });
+  },
+
+  /**
+   * 获取聊天会话详情
+   */
+  async getChatSession(sessionId: string) {
+    return request<{
+      id: string;
+      title: string;
+      lastMessage: string;
+      timestamp: string;
+      createdAt: string;
+      updatedAt: string;
+      messageCount: number;
+    }>(`/chat/sessions/${sessionId}`, { method: 'GET' });
+  },
+
+  /**
+   * 删除聊天会话
+   */
+  async deleteChatSession(sessionId: string) {
+    return request<{ success: boolean }>(`/chat/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * 获取会话的所有消息
+   */
+  async getChatMessages(sessionId: string) {
+    return request<{
+      messages: Array<{
+        id: string;
+        role: string;
+        content: string;
+        mode?: string;
+        quotes?: any[];
+        createdAt: string;
+      }>;
+    }>(`/chat/sessions/${sessionId}/messages`, { method: 'GET' });
+  },
+
+  /**
+   * 添加消息到会话
+   */
+  async addChatMessage(
+    sessionId: string, 
+    role: string, 
+    content: string,
+    mode?: string,
+    quotes?: any[]
+  ) {
+    return request<{
+      id: string;
+      role: string;
+      content: string;
+      mode?: string;
+      quotes?: any[];
+      createdAt: string;
+    }>(`/chat/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ role, content, mode, quotes }),
+    });
+  },
+};
+
+// ==================== 统一导出所有 API ====================
+export const api = {
+  ...authAPI,
+  ...kbAPI,
+  ...noteAPI,
+  ...favoriteAPI,
+  ...chatAPI,
+};

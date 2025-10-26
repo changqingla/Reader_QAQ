@@ -3,11 +3,14 @@
  * 显示用户收藏的知识库和文档，支持PDF文档预览
  */
 import React, { useState, useEffect } from 'react';
-import { Database, FileText, Trash2, ExternalLink, X, Loader2, Star, MessageCircle, Send } from 'lucide-react';
+import { Database, FileText, Trash2, ExternalLink, X, Loader2, Star, MessageCircle, Send, User, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar/Sidebar';
-import { favoriteAPI, kbAPI } from '@/lib/api';
+import OptimizedMarkdown from '@/components/OptimizedMarkdown';
+import { api, favoriteAPI, kbAPI } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
+import { useRAGChat } from '@/hooks/useRAGChat';
+import { useChatSessions } from '@/hooks/useChatSessions';
 import styles from './Favorites.module.css';
 
 type TabType = 'kb' | 'doc';
@@ -15,6 +18,7 @@ type TabType = 'kb' | 'doc';
 export default function Favorites() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { chatSessions, refreshSessions } = useChatSessions();
   const [activeTab, setActiveTab] = useState<TabType>('kb');
   const [favoriteKBs, setFavoriteKBs] = useState<any[]>([]);
   const [favoriteDocs, setFavoriteDocs] = useState<any[]>([]);
@@ -27,8 +31,14 @@ export default function Favorites() {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [loadingPreview, setLoadingPreview] = useState(false);
   
-  // Chat State (UI only, no actual functionality)
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  // RAG Chat Hook - 当预览文档时使用
+  const { messages, isStreaming, sendMessage, clearMessages } = useRAGChat({
+    kbId: previewDoc?.kbId,
+    docIds: previewDoc ? [previewDoc.id] : undefined,
+    mode: 'deep',
+    onError: (error) => toast.error(`对话错误: ${error}`)
+  });
+  
   const [inputMessage, setInputMessage] = useState('');
 
   useEffect(() => {
@@ -87,12 +97,14 @@ export default function Favorites() {
   // 预览文档
   const handlePreviewDocument = async (doc: any) => {
     setLoadingPreview(true);
+    clearMessages(); // 清空对话历史
     try {
       const response = await kbAPI.getDocumentUrl(doc.kbId, doc.id);
       setPreviewDoc(doc);
       setPreviewUrl(response.url);
     } catch (error: any) {
       toast.error(error.message || '无法加载文档预览');
+      setPreviewDoc(null);
     } finally {
       setLoadingPreview(false);
     }
@@ -102,32 +114,35 @@ export default function Favorites() {
   const handleClosePreview = () => {
     setPreviewDoc(null);
     setPreviewUrl('');
-    setChatMessages([]);
+    clearMessages();
     setInputMessage('');
   };
 
-  // 模拟发送消息（仅UI展示）
+  // 发送消息
   const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-    
-    // 添加用户消息
-    const userMsg = {
-      id: Date.now(),
-      role: 'user',
-      content: inputMessage.trim()
-    };
-    setChatMessages(prev => [...prev, userMsg]);
+    if (!inputMessage.trim() || !previewDoc || isStreaming) return;
+    sendMessage(inputMessage);
     setInputMessage('');
-    
-    // 模拟AI回复（仅演示）
-    setTimeout(() => {
-      const aiMsg = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: '这是一个演示对话界面，实际对话功能尚未实现。'
-      };
-      setChatMessages(prev => [...prev, aiMsg]);
-    }, 500);
+  };
+
+  // 聊天处理函数
+  const handleNewChat = () => {
+    navigate('/');
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    navigate('/');
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await api.deleteChatSession(chatId);
+      await refreshSessions();
+      toast.success('对话已删除');
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      toast.error('删除对话失败');
+    }
   };
 
   return (
@@ -138,9 +153,10 @@ export default function Favorites() {
 
       <div className={`${styles.sidebarContainer} ${isMobile && isSidebarOpen ? styles.open : ''}`}>
         <Sidebar 
-          onNewChat={() => {}} 
-          onSelectChat={() => {}} 
-          selectedChatId={undefined} 
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          chats={chatSessions}
         />
       </div>
       
@@ -189,27 +205,63 @@ export default function Favorites() {
               <div className={styles.chatHeader}>
                 <MessageCircle size={18} />
                 <span>文档对话</span>
-                <span className={styles.chatSubtitle}>（演示界面）</span>
               </div>
               <div className={styles.chatMessages}>
-                {chatMessages.length === 0 ? (
+                {messages.length === 0 ? (
                   <div className={styles.chatEmpty}>
                     <MessageCircle size={56} />
                     <p>开始与文档对话</p>
                     <span>提出你的问题，AI 将基于文档内容回答</span>
-                    <div className={styles.demoNote}>💡 这是演示界面，实际对话功能尚未实现</div>
                   </div>
                 ) : (
-                  chatMessages.map((msg) => (
-                    <div 
-                      key={msg.id} 
-                      className={`${styles.message} ${msg.role === 'user' ? styles.messageUser : styles.messageAssistant}`}
-                    >
-                      <div className={styles.messageContent}>
-                        {msg.content}
+                  <>
+                    {messages.map((msg, index) => (
+                      <div 
+                        key={msg.id} 
+                        className={`${styles.messageItem} ${msg.role === 'user' ? styles.userMessageItem : styles.aiMessageItem}`}
+                      >
+                        <div className={msg.role === 'user' ? styles.userAvatar : styles.aiAvatar}>
+                          {msg.role === 'user' ? <User size={16} /> : <Sparkles size={16} />}
+                        </div>
+                        <div className={styles.messageContentWrapper}>
+                          {msg.role === 'assistant' && !msg.content && isStreaming && index === messages.length - 1 ? (
+                            <div className={styles.thinking}>
+                              <div className={styles.thinkingDots}>
+                                <span className={styles.dot}></span>
+                                <span className={styles.dot}></span>
+                                <span className={styles.dot}></span>
+                              </div>
+                              <span className={styles.thinkingText}>正在思考...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className={msg.role === 'user' ? styles.userMessageText : styles.aiMessageText}>
+                                {msg.role === 'user' ? (
+                                  msg.content
+                                ) : (
+                                  <OptimizedMarkdown>
+                                    {msg.content}
+                                  </OptimizedMarkdown>
+                                )}
+                              </div>
+                              {msg.quotes && msg.quotes.length > 0 && (
+                                <div className={styles.quotes}>
+                                  {msg.quotes.map((quote: any, i: number) => (
+                                    <div key={i} className={styles.quoteCard}>
+                                      <div className={styles.quoteSource}>📄 {quote.source}</div>
+                                      {quote.page && (
+                                        <div className={styles.quotePage}>第 {quote.page} 页</div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </>
                 )}
               </div>
               <div className={styles.chatInputArea}>

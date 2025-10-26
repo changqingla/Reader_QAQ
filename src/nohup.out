@@ -1,0 +1,500 @@
+INFO:     Started server process [72504]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:13000 (Press CTRL+C to quit)
+🚀 Starting Reader QAQ API...
+✅ Application started successfully
+INFO:     127.0.0.1:53054 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53066 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53064 - "GET /api/kb?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53082 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53088 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53090 - "GET /api/kb?page=1&pageSize=20 HTTP/1.1" 200 OK
+❌ Uncaught exception: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+[SQL: SELECT users.id, users.email, users.password_hash, users.name, users.avatar, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR]
+[parameters: ('test@reader.com',)]
+(Background on this error at: https://sqlalche.me/e/20/rvf5)
+INFO:     192.168.0.5:58756 - "POST /api/auth/login HTTP/1.0" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 854, in _start_transaction
+    self._transaction = self._connection.transaction(
+  File "/data/anaconda3/lib/python3.10/site-packages/asyncpg/connection.py", line 303, in transaction
+    self._check_open()
+  File "/data/anaconda3/lib/python3.10/site-packages/asyncpg/connection.py", line 1534, in _check_open
+    raise exceptions.InterfaceError('connection is closed')
+asyncpg.exceptions._base.InterfaceError: connection is closed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+    cursor.execute(statement, parameters)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 591, in execute
+    self._adapt_connection.await_(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 125, in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 185, in greenlet_spawn
+    value = await result
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 527, in _prepare_and_execute
+    await adapt_connection._start_transaction()
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 861, in _start_transaction
+    self._handle_exception(error)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 808, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.InterfaceError: <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/data/anaconda3/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 426, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/data/anaconda3/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/applications.py", line 1106, in __call__
+    await super().__call__(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/data/ht/workspace/Reader_QAQ/src/controllers/auth_controller.py", line 20, in login
+    token, user_data = await service.login(request.email, request.password)
+  File "/data/ht/workspace/Reader_QAQ/src/services/auth_service.py", line 20, in login
+    user = await self.user_repo.get_by_email(email)
+  File "/data/ht/workspace/Reader_QAQ/src/repositories/user_repository.py", line 23, in get_by_email
+    result = await self.db.execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/ext/asyncio/session.py", line 455, in execute
+    result = await greenlet_spawn(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 190, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2308, in execute
+    return self._execute_internal(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2190, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/orm/context.py", line 293, in orm_execute_statement
+    result = conn.execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1639, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2343, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+    cursor.execute(statement, parameters)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 591, in execute
+    self._adapt_connection.await_(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 125, in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 185, in greenlet_spawn
+    value = await result
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 527, in _prepare_and_execute
+    await adapt_connection._start_transaction()
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 861, in _start_transaction
+    self._handle_exception(error)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 808, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.InterfaceError: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+[SQL: SELECT users.id, users.email, users.password_hash, users.name, users.avatar, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR]
+[parameters: ('test@reader.com',)]
+(Background on this error at: https://sqlalche.me/e/20/rvf5)
+INFO:     192.168.0.5:45622 - "POST /api/auth/login HTTP/1.0" 404 Not Found
+INFO:     192.168.0.5:45908 - "POST /api/auth/login HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:41012 - "GET /api/kb?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41028 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41000 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41034 - "GET /api/kb?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41044 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41052 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.1" 200 OK
+INFO:     192.168.0.5:55628 - "GET /api/ HTTP/1.0" 404 Not Found
+INFO:     192.168.0.5:53382 - "GET / HTTP/1.1" 404 Not Found
+INFO:     192.168.0.5:53388 - "GET /api/health HTTP/1.0" 200 OK
+INFO:     192.168.0.5:38540 - "GET /api/health HTTP/1.0" 200 OK
+❌ Uncaught exception: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+[SQL: SELECT users.id, users.email, users.password_hash, users.name, users.avatar, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR]
+[parameters: ('test@qq.com',)]
+(Background on this error at: https://sqlalche.me/e/20/rvf5)
+INFO:     192.168.0.5:56506 - "POST /api/auth/login HTTP/1.0" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 854, in _start_transaction
+    self._transaction = self._connection.transaction(
+  File "/data/anaconda3/lib/python3.10/site-packages/asyncpg/connection.py", line 303, in transaction
+    self._check_open()
+  File "/data/anaconda3/lib/python3.10/site-packages/asyncpg/connection.py", line 1534, in _check_open
+    raise exceptions.InterfaceError('connection is closed')
+asyncpg.exceptions._base.InterfaceError: connection is closed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+    cursor.execute(statement, parameters)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 591, in execute
+    self._adapt_connection.await_(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 125, in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 185, in greenlet_spawn
+    value = await result
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 527, in _prepare_and_execute
+    await adapt_connection._start_transaction()
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 861, in _start_transaction
+    self._handle_exception(error)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 808, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.InterfaceError: <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/data/anaconda3/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 426, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/data/anaconda3/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/applications.py", line 1106, in __call__
+    await super().__call__(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/data/anaconda3/lib/python3.10/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "/data/anaconda3/lib/python3.10/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/data/ht/workspace/Reader_QAQ/src/controllers/auth_controller.py", line 20, in login
+    token, user_data = await service.login(request.email, request.password)
+  File "/data/ht/workspace/Reader_QAQ/src/services/auth_service.py", line 20, in login
+    user = await self.user_repo.get_by_email(email)
+  File "/data/ht/workspace/Reader_QAQ/src/repositories/user_repository.py", line 23, in get_by_email
+    result = await self.db.execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/ext/asyncio/session.py", line 455, in execute
+    result = await greenlet_spawn(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 190, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2308, in execute
+    return self._execute_internal(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/orm/session.py", line 2190, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/orm/context.py", line 293, in orm_execute_statement
+    result = conn.execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1639, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2343, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+    cursor.execute(statement, parameters)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 591, in execute
+    self._adapt_connection.await_(
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 125, in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 185, in greenlet_spawn
+    value = await result
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 527, in _prepare_and_execute
+    await adapt_connection._start_transaction()
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 861, in _start_transaction
+    self._handle_exception(error)
+  File "/data/anaconda3/lib/python3.10/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 808, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.InterfaceError: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+[SQL: SELECT users.id, users.email, users.password_hash, users.name, users.avatar, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR]
+[parameters: ('test@qq.com',)]
+(Background on this error at: https://sqlalche.me/e/20/rvf5)
+INFO:     192.168.0.5:52836 - "POST /api/auth/login HTTP/1.0" 404 Not Found
+INFO:     192.168.0.5:38320 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53942 - "GET /api/auth HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59670 - "GET /docs HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:43254 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:43262 - "GET /health HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [72504]
+🛑 Shutting down...
+✅ Cleanup completed
+INFO:     Started server process [1250342]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:13000 (Press CTRL+C to quit)
+🚀 Starting Reader QAQ API...
+✅ Application started successfully
+INFO:     192.168.0.5:35578 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:35586 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:35596 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:35600 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:35608 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%BB%8F%E6%B5%8E%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:46292 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:46298 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33640 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33634 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33630 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33666 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33662 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33648 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33678 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33688 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%BB%8F%E6%B5%8E%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33698 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%AE%A1%E7%90%86%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33708 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E6%96%87%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33724 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33738 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33754 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33760 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33774 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33790 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:33794 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36910 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36934 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36920 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36954 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36932 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36970 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents/798af9a8-e89c-4ebf-8d74-1568258dd77a/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:36984 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents/31d99b8e-a048-48db-b5f0-724d6e308e0b/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:56962 - "GET /api/notes/folders HTTP/1.0" 200 OK
+INFO:     192.168.0.5:56956 - "GET /api/notes?page=1&pageSize=100 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:56978 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:56992 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:56984 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57006 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57008 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57022 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%BB%8F%E6%B5%8E%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57034 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%AE%A1%E7%90%86%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57048 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E6%96%87%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57054 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%8E%86%E5%8F%B2%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:45360 - "POST /api/auth/register HTTP/1.0" 200 OK
+INFO:     192.168.0.5:45362 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.0.5:32814 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:32824 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:32828 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:32842 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:32844 - "GET /api/favorites/document?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:32854 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55270 - "GET /api/notes/folders HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55278 - "GET /api/notes?page=1&pageSize=100 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55290 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55298 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55310 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55304 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55300 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55326 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55332 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%BB%8F%E6%B5%8E%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55346 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%AE%A1%E7%90%86%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55348 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E6%96%87%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:55350 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%8E%86%E5%8F%B2%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60392 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E8%89%BA%E6%9C%AF%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60398 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34910 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34916 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34922 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34924 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34938 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34950 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34966 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34968 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:34972 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48872 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48876 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48888 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48904 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48908 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48916 - "GET /api/notes?page=1&pageSize=100 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48910 - "GET /api/notes/folders HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48924 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48928 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48944 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48956 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48960 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48980 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48976 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48988 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49006 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48992 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49020 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49026 - "GET /api/notes?page=1&pageSize=100 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49032 - "GET /api/notes/folders HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49034 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49042 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49058 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49068 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:49074 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents/798af9a8-e89c-4ebf-8d74-1568258dd77a/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:47934 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:47948 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:47928 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44224 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44232 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%BB%8F%E6%B5%8E%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44234 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%AE%A1%E7%90%86%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44250 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E6%96%87%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44262 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%8E%86%E5%8F%B2%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44264 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44268 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44282 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44272 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44292 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E5%B7%A5%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44302 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44310 - "GET /api/kb/public/list?page=1&pageSize=20&category=%E7%BB%8F%E6%B5%8E%E5%AD%A6 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:46916 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54394 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54410 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54424 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54436 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54448 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54456 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54458 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54474 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54476 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54492 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54504 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54510 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54508 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54522 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54534 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:54542 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41212 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41224 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41232 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41244 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41246 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41252 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41262 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41274 - "GET /api/notes?page=1&pageSize=100 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41276 - "GET /api/notes/folders HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41288 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41302 - "GET /api/notes/folders HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41318 - "GET /api/notes?page=1&pageSize=100 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41324 - "GET /api/notes?page=1&pageSize=100&folderId=31159f3d-e04c-4f91-9152-08d62e1df99d HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41332 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41348 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:41352 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:43554 - "POST /api/auth/login HTTP/1.0" 401 Unauthorized
+INFO:     192.168.0.5:60900 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60918 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60914 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60926 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60938 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60946 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60936 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60956 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60970 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:52536 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:52540 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:52554 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:52568 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:52566 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:39440 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:39442 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:39452 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:60050 - "POST /api/auth/register HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48942 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.0.5:45226 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:45232 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:45236 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44128 - "POST /api/auth/login HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44134 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44150 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44166 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44194 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44188 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44202 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44178 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44214 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37314 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37302 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37330 - "DELETE /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents/92784acc-0665-4837-b5b2-9bd2a08b7772 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37340 - "GET /api/kb/8363fa92-4d29-485d-abc7-01a6aaeb8c46/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37354 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53898 - "GET /api/kb/featured/list?page=1&pageSize=30 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53894 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53914 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53930 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53936 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53958 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53964 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53974 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:53952 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37340 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37348 - "GET /api/favorites/document?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:37358 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:44574 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57832 - "GET /api/kb/subscriptions/list?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57842 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57876 - "GET /api/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57864 - "GET /api/kb/quota HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57850 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/info HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57880 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57886 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:57898 - "GET /api/favorites/document?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:51582 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48496 - "GET /api/favorites/kb?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48498 - "GET /api/favorites/document?page=1&pageSize=20 HTTP/1.0" 200 OK
+INFO:     192.168.0.5:48502 - "GET /api/kb/2ab682b3-3a88-4b3b-a859-7057df76a430/documents/d4dfdf65-03de-4dc6-92c4-1ee3703d8fbe/url HTTP/1.0" 200 OK

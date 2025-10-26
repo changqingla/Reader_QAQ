@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sun, Moon, Headphones, LogOut, Book, Star, Notebook, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Plus, Sun, Moon, Headphones, LogOut, Book, Star, Notebook, ChevronsLeft, ChevronsRight, MoreVertical, Trash2 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -8,42 +8,25 @@ interface Chat {
   id: string;
   title: string;
   lastMessage: string;
-  timestamp: string;
+  timestamp: string; // 显示用的相对时间
+  createdAt: string; // ISO日期字符串，用于分类
 }
-
-const mockChats: Chat[] = [
-  {
-    id: '1',
-    title: 'Typo Assistance Request',
-    lastMessage: 'Help me fix typos in my document',
-    timestamp: '2 hours ago'
-  },
-  {
-    id: '2', 
-    title: 'Quadratic Function Plot',
-    lastMessage: 'How to plot quadratic functions?',
-    timestamp: '1 day ago'
-  },
-  {
-    id: '3',
-    title: 'Toyota Names Poetry',
-    lastMessage: 'Write a poem about Toyota car names',
-    timestamp: '2 days ago'
-  }
-];
 
 interface SidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
+  onDeleteChat?: (chatId: string) => void;  // 添加删除回调
   selectedChatId?: string;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  chats?: Chat[];  // 添加 chats 属性
 }
 
-export default function Sidebar({ onNewChat, onSelectChat, selectedChatId, collapsed: controlledCollapsed, onToggleCollapse }: SidebarProps) {
+export default function Sidebar({ onNewChat, onSelectChat, onDeleteChat, selectedChatId, collapsed: controlledCollapsed, onToggleCollapse, chats = [] }: SidebarProps) {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const [menuOpenChatId, setMenuOpenChatId] = useState<string | null>(null);
   
   // 使用外部控制的 collapsed 或内部状态
   const collapsed = controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
@@ -106,7 +89,7 @@ export default function Sidebar({ onNewChat, onSelectChat, selectedChatId, colla
 
   const handleChatClick = (chatId: string) => {
     onSelectChat(chatId);
-    navigate(`/chat/${chatId}`);
+    // 不跳转路由，停留在主页显示对话内容
   };
 
   const handleNewChatClick = () => {
@@ -116,6 +99,28 @@ export default function Sidebar({ onNewChat, onSelectChat, selectedChatId, colla
       navigate('/');
     }
   };
+
+  const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation(); // 阻止触发聊天项的点击事件
+    if (onDeleteChat) {
+      onDeleteChat(chatId);
+    }
+    setMenuOpenChatId(null);
+  };
+
+  const toggleMenu = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    setMenuOpenChatId(menuOpenChatId === chatId ? null : chatId);
+  };
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = () => setMenuOpenChatId(null);
+    if (menuOpenChatId) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [menuOpenChatId]);
 
   return (
     <div className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
@@ -162,11 +167,27 @@ export default function Sidebar({ onNewChat, onSelectChat, selectedChatId, colla
 
       {/* Chat List */}
       <div className={styles.chatList}>
-        <div className={styles.sectionTitle}>近七天</div>
-        {mockChats.filter(c => {
-          const s = c.timestamp.toLowerCase();
-          return s.includes('hour') || s.includes('day') && parseInt(s, 10) <= 7;
-        }).map((chat) => (
+        {chats.length > 0 && (() => {
+          const now = new Date();
+          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          
+          // 根据 createdAt 分类
+          const recentChats = chats.filter(c => {
+            const createdDate = new Date(c.createdAt);
+            return createdDate >= sevenDaysAgo;
+          });
+          
+          const olderChats = chats.filter(c => {
+            const createdDate = new Date(c.createdAt);
+            return createdDate < sevenDaysAgo;
+          });
+          
+          return (
+            <>
+              {recentChats.length > 0 && (
+                <>
+                  <div className={styles.sectionTitle}>近七天</div>
+                  {recentChats.map((chat) => (
           <div
             key={chat.id}
             className={`${styles.chatItem} ${selectedChatId === chat.id ? styles.selected : ''}`}
@@ -176,30 +197,71 @@ export default function Sidebar({ onNewChat, onSelectChat, selectedChatId, colla
               <div className={styles.chatTitle}>{chat.title}</div>
               <div className={styles.chatPreview}>{chat.lastMessage}</div>
             </div>
-            <div className={styles.chatTime}>{chat.timestamp}</div>
-          </div>
-        ))}
-
-        <div className={styles.sectionTitle}>更早</div>
-        {mockChats.filter(c => {
-          const s = c.timestamp.toLowerCase();
-          if (s.includes('hour')) return false;
-          const m = s.match(/(\d+)/);
-          if (!m) return true;
-          return parseInt(m[1], 10) > 7;
-        }).map((chat) => (
-          <div
-            key={chat.id}
-            className={`${styles.chatItem} ${selectedChatId === chat.id ? styles.selected : ''}`}
-            onClick={() => handleChatClick(chat.id)}
-          >
-            <div className={styles.chatContent}>
-              <div className={styles.chatTitle}>{chat.title}</div>
-              <div className={styles.chatPreview}>{chat.lastMessage}</div>
+            <div className={styles.chatActions}>
+              <button 
+                className={styles.menuButton}
+                onClick={(e) => toggleMenu(e, chat.id)}
+                title="更多操作"
+              >
+                <MoreVertical size={16} />
+              </button>
+              {menuOpenChatId === chat.id && (
+                <div className={styles.chatMenu}>
+                  <button 
+                    className={styles.menuItem}
+                    onClick={(e) => handleDeleteChat(e, chat.id)}
+                  >
+                    <Trash2 size={14} />
+                    <span>删除对话</span>
+                  </button>
+                </div>
+              )}
             </div>
-            <div className={styles.chatTime}>{chat.timestamp}</div>
           </div>
         ))}
+                </>
+              )}
+              
+              {olderChats.length > 0 && (
+                <>
+                  <div className={styles.sectionTitle}>更早</div>
+                  {olderChats.map((chat) => (
+              <div
+                key={chat.id}
+                className={`${styles.chatItem} ${selectedChatId === chat.id ? styles.selected : ''}`}
+                onClick={() => handleChatClick(chat.id)}
+              >
+                <div className={styles.chatContent}>
+                  <div className={styles.chatTitle}>{chat.title}</div>
+                  <div className={styles.chatPreview}>{chat.lastMessage}</div>
+                </div>
+                <div className={styles.chatActions}>
+                  <button 
+                    className={styles.menuButton}
+                    onClick={(e) => toggleMenu(e, chat.id)}
+                    title="更多操作"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {menuOpenChatId === chat.id && (
+                    <div className={styles.chatMenu}>
+                      <button 
+                        className={styles.menuItem}
+                        onClick={(e) => handleDeleteChat(e, chat.id)}
+                      >
+                        <Trash2 size={14} />
+                        <span>删除对话</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+                </>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* Bottom Section with Avatar */}

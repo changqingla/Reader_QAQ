@@ -64,7 +64,7 @@ class AuthService:
             owner_id=str(user.id),
             name="我的知识库",
             description="这是您的第一个知识库，您可以在这里上传和管理文档",
-            tags=[]
+            category="其它"
         )
         
         # Create access token
