@@ -75,6 +75,17 @@
   overflow: hidden;
 }
 
+/* 空状态容器：整体垂直居中 */
+.emptyContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 24px;
+  padding: 24px;
+}
+
 /* ============================================
    加载状态
    ============================================ */
@@ -120,6 +131,13 @@
   justify-content: center;
   padding: 60px 24px 40px;
   overflow-y: auto;
+}
+
+/* 空状态时的紧凑欢迎区 */
+.welcomeCompact {
+  flex: 0 0 auto;
+  padding: 0;
+  overflow-y: visible;
 }
 
 /* 主标题 */
@@ -182,6 +200,12 @@
   flex-shrink: 0;
   padding: 20px 24px 24px;
   background: var(--bg);
+}
+
+/* 空状态时的输入区：去除底部固定样式 */
+.centeredInputSection {
+  padding: 0;
+  background: transparent;
 }
 
 .inputWrapper {
@@ -329,7 +353,7 @@
 }
 
 .messageGroup {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 32px;
   display: flex;

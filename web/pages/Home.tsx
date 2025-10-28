@@ -147,13 +147,13 @@ export default function Home() {
               <p className={styles.loadingText}>加载历史消息...</p>
             </div>
           ) : messages.length === 0 ? (
-            // 欢迎屏幕
-            <>
-              <div className={styles.welcomeContent}>
+            // 欢迎屏幕 + 居中输入框
+            <div className={styles.emptyContainer}>
+              <div className={`${styles.welcomeContent} ${styles.welcomeCompact}`}>
                 <h1 className={styles.welcomeTitle}>
                   用<span className={styles.highlight}>提问</span>发现世界
                 </h1>
-                
+
                 <div className={styles.suggestions}>
                   {quickQuestions.map((q, i) => (
                     <button
@@ -168,7 +168,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className={styles.inputSection}>
+              <div className={`${styles.inputSection} ${styles.centeredInputSection}`}>
                 <div className={styles.inputWrapper}>
                   <div className={styles.inputBox}>
                     <textarea
@@ -223,7 +223,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             // 对话界面
             <>

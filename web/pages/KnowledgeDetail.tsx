@@ -10,7 +10,7 @@ import KnowledgeSidebar, { KnowledgeSidebarRef } from '@/components/KnowledgeSid
 import CreateKnowledgeModal from '@/components/CreateKnowledgeModal/CreateKnowledgeModal';
 import EditKnowledgeModal from '@/components/EditKnowledgeModal/EditKnowledgeModal';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
-import { kbAPI, favoriteAPI } from '@/lib/api';
+import { kbAPI, favoriteAPI, api } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
 import { useRAGChat } from '@/hooks/useRAGChat';
 import { 
@@ -63,12 +63,19 @@ export default function KnowledgeDetail() {
   
   // Chat State
   const [chatInput, setChatInput] = useState('');
+  const [chatSessions, setChatSessions] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(undefined);
   
   // RAG Chat Hook - 知识库页面固定使用 deep 模式
-  const { messages, isStreaming, sendMessage } = useRAGChat({
+  const { messages, isStreaming, sendMessage, clearMessages } = useRAGChat({
     kbId: kbId,
+    sessionId: currentSessionId,
     mode: 'deep',
-    onError: (error) => toast.error(`对话错误: ${error}`)
+    onError: (error) => toast.error(`对话错误: ${error}`),
+    onSessionCreated: (newSessionId) => {
+      setCurrentSessionId(newSessionId);
+      loadChatSessions();
+    }
   });
   
   // PDF Preview State
@@ -78,6 +85,16 @@ export default function KnowledgeDetail() {
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const kbSidebarRef = useRef<KnowledgeSidebarRef>(null);
+
+  // 加载聊天会话列表
+  const loadChatSessions = async () => {
+    try {
+      const response = await api.listChatSessions(1, 50);
+      setChatSessions(response.sessions);
+    } catch (error) {
+      console.error('Failed to load chat sessions:', error);
+    }
+  };
 
   // 格式化相对时间
   const formatRelativeTime = (dateString: string) => {
@@ -107,6 +124,7 @@ export default function KnowledgeDetail() {
   useEffect(() => {
     loadKnowledgeBases();
     loadQuota();
+    loadChatSessions();
   }, []);
 
   useEffect(() => {
@@ -417,9 +435,31 @@ export default function KnowledgeDetail() {
 
       <div className={`${styles.sidebarContainer} ${isMobile && isSidebarOpen ? styles.open : ''}`}>
         <Sidebar 
-          onNewChat={() => {}} 
-          onSelectChat={() => {}} 
-          selectedChatId={undefined}
+          onNewChat={() => {
+            setCurrentSessionId(undefined);
+            clearMessages();
+          }} 
+          onSelectChat={(chatId) => {
+            if (chatId !== currentSessionId) {
+              setCurrentSessionId(chatId);
+            }
+          }} 
+          onDeleteChat={async (chatId) => {
+            try {
+              await api.deleteChatSession(chatId);
+              if (chatId === currentSessionId) {
+                setCurrentSessionId(undefined);
+                clearMessages();
+              }
+              await loadChatSessions();
+              toast.success('对话已删除');
+            } catch (error) {
+              console.error('Failed to delete chat:', error);
+              toast.error('删除对话失败');
+            }
+          }}
+          selectedChatId={currentSessionId}
+          chats={chatSessions}
           collapsed={isMainSidebarCollapsed}
           onToggleCollapse={() => setIsMainSidebarCollapsed(!isMainSidebarCollapsed)}
         />

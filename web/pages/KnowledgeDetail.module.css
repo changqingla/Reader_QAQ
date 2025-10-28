@@ -59,20 +59,20 @@
 
 /* KB Info Card - Compact info display */
 .kbInfoCard {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   margin-bottom: 16px;
   transition: box-shadow 0.3s ease;
 }
 
 .kbInfoCard:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 12px 24px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* KB Header - 知识库基础信息 */
@@ -440,7 +440,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #f5f5f5;
+  background: var(--bg);
 }
 
 .previewHeader {
@@ -448,9 +448,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.98));
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .previewTitle {
@@ -540,7 +539,7 @@
   flex: 1;
   min-height: 0;
   display: flex;
-  background: #f5f5f5;
+  background: var(--bg);
   padding: 16px;
   overflow: hidden;
 }
@@ -549,9 +548,9 @@
   width: 100%;
   height: 100%;
   border: none;
-  background: white;
+  background: var(--surface);
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   object-fit: contain;
 }
@@ -565,8 +564,8 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  color: #6b7280;
-  background: white;
+  color: var(--text-muted);
+  background: var(--surface);
   padding: 48px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -604,7 +603,6 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--text);
-  border-bottom: 1px solid var(--border);
 }
 
 .chatContent {
