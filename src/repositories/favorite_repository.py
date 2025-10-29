@@ -7,6 +7,7 @@ from models.favorite import Favorite
 from models.knowledge_base import KnowledgeBase
 from models.document import Document
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +33,14 @@ class FavoriteRepository:
             return existing
         
         try:
+            # Convert string IDs to UUID
+            user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+            item_uuid = uuid.UUID(item_id) if isinstance(item_id, str) else item_id
+            
             favorite = Favorite(
-                user_id=user_id,
+                user_id=user_uuid,
                 item_type=item_type,
-                item_id=item_id,
+                item_id=item_uuid,
                 source=source
             )
             self.db.add(favorite)
@@ -58,10 +63,14 @@ class FavoriteRepository:
         item_id: str
     ) -> bool:
         """Remove a favorite."""
+        # Convert string IDs to UUID
+        user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+        item_uuid = uuid.UUID(item_id) if isinstance(item_id, str) else item_id
+        
         stmt = delete(Favorite).where(
-            Favorite.user_id == user_id,
+            Favorite.user_id == user_uuid,
             Favorite.item_type == item_type,
-            Favorite.item_id == item_id
+            Favorite.item_id == item_uuid
         )
         
         result = await self.db.execute(stmt)
@@ -69,6 +78,8 @@ class FavoriteRepository:
         deleted = result.rowcount > 0
         if deleted:
             logger.info(f"Removed favorite: user={user_id}, type={item_type}, item={item_id}")
+        else:
+            logger.warning(f"Failed to remove favorite (not found): user={user_id}, type={item_type}, item={item_id}")
         return deleted
     
     async def get_favorite(
@@ -78,11 +89,15 @@ class FavoriteRepository:
         item_id: str
     ) -> Optional[Favorite]:
         """Get a specific favorite."""
+        # Convert string IDs to UUID
+        user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+        item_uuid = uuid.UUID(item_id) if isinstance(item_id, str) else item_id
+        
         result = await self.db.execute(
             select(Favorite).where(
-                Favorite.user_id == user_id,
+                Favorite.user_id == user_uuid,
                 Favorite.item_type == item_type,
-                Favorite.item_id == item_id
+                Favorite.item_id == item_uuid
             )
         )
         return result.scalar_one_or_none()
@@ -94,11 +109,14 @@ class FavoriteRepository:
         page_size: int = 20
     ) -> Tuple[List[KnowledgeBase], int]:
         """List favorite knowledge bases with details."""
+        # Convert string ID to UUID
+        user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+        
         # Count total
         count_stmt = select(func.count()).select_from(
             select(Favorite.id)
             .where(
-                Favorite.user_id == user_id,
+                Favorite.user_id == user_uuid,
                 Favorite.item_type == Favorite.ITEM_TYPE_KB
             )
             .subquery()
@@ -113,7 +131,7 @@ class FavoriteRepository:
                 (Favorite.item_id == KnowledgeBase.id) &
                 (Favorite.item_type == Favorite.ITEM_TYPE_KB)
             )
-            .where(Favorite.user_id == user_id)
+            .where(Favorite.user_id == user_uuid)
             .order_by(desc(Favorite.created_at))
             .limit(page_size)
             .offset((page - 1) * page_size)
@@ -131,11 +149,14 @@ class FavoriteRepository:
         page_size: int = 20
     ) -> Tuple[List[Document], int]:
         """List favorite documents with details."""
+        # Convert string ID to UUID
+        user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+        
         # Count total
         count_stmt = select(func.count()).select_from(
             select(Favorite.id)
             .where(
-                Favorite.user_id == user_id,
+                Favorite.user_id == user_uuid,
                 Favorite.item_type == Favorite.ITEM_TYPE_DOC
             )
             .subquery()
@@ -150,7 +171,7 @@ class FavoriteRepository:
                 (Favorite.item_id == Document.id) &
                 (Favorite.item_type == Favorite.ITEM_TYPE_DOC)
             )
-            .where(Favorite.user_id == user_id)
+            .where(Favorite.user_id == user_uuid)
             .order_by(desc(Favorite.created_at))
             .limit(page_size)
             .offset((page - 1) * page_size)

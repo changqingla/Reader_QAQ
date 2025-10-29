@@ -1,5 +1,6 @@
 """Knowledge Base service business logic."""
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from fastapi import HTTPException, status
 from repositories.kb_repository import KnowledgeBaseRepository
 from repositories.document_repository import DocumentRepository
@@ -8,6 +9,7 @@ from utils.external_services import DocumentProcessService
 from utils.es_utils import get_user_es_index
 from typing import List, Tuple, Optional
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -250,6 +252,31 @@ class KnowledgeBaseService:
             )
         
         logger.info(f"User {user_id} unsubscribed from KB {kb_id}")
+        
+        # Auto-remove favorite if it was from subscription
+        from services.favorite_service import FavoriteService
+        from models.favorite import Favorite
+        favorite_service = FavoriteService(self.db)
+        try:
+            # Convert string IDs to UUID
+            user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+            kb_uuid = uuid.UUID(kb_id) if isinstance(kb_id, str) else kb_id
+            
+            # Check if favorite exists and is from subscription
+            favorite = await self.db.execute(
+                select(Favorite).where(
+                    Favorite.user_id == user_uuid,
+                    Favorite.item_type == Favorite.ITEM_TYPE_KB,
+                    Favorite.item_id == kb_uuid,
+                    Favorite.source == Favorite.SOURCE_SUBSCRIPTION
+                )
+            )
+            fav = favorite.scalar_one_or_none()
+            if fav:
+                await favorite_service.unfavorite_kb(kb_id, user_id)
+                logger.info(f"Auto-removed favorite KB {kb_id} for user {user_id}")
+        except Exception as e:
+            logger.warning(f"Failed to auto-remove favorite KB {kb_id}: {e}")
         
         # Return updated count
         kb = await self.kb_repo.get_by_id_public(kb_id)

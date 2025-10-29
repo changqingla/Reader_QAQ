@@ -4,7 +4,7 @@ import OptimizedMarkdown from '@/components/OptimizedMarkdown';
 import { useRAGChat } from '@/hooks/useRAGChat';
 import { useToast } from '@/hooks/useToast';
 import { api } from '@/lib/api';
-import { Send, Menu, User, Sparkles, Zap, Search } from 'lucide-react';
+import { ArrowUp, Menu, User, Sparkles, Zap, Search, Database, X, Check } from 'lucide-react';
 import styles from './Home.module.css';
 
 export default function Home() {
@@ -16,6 +16,14 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [chatSessions, setChatSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(undefined);
+  
+  // 知识库选择相关状态
+  const [showKBSelector, setShowKBSelector] = useState(false);
+  const [selectedKBs, setSelectedKBs] = useState<string[]>([]);
+  const [myKBs, setMyKBs] = useState<any[]>([]);
+  const [favoriteKBs, setFavoriteKBs] = useState<any[]>([]);
+  const [loadingKBs, setLoadingKBs] = useState(false);
+  const kbSelectorRef = useRef<HTMLDivElement>(null);
 
   // 根据选择确定模式：深度思考固定启用，可选择联网搜索
   const chatMode = webSearch ? 'search' : 'deep';
@@ -41,12 +49,64 @@ export default function Home() {
     }
   };
 
+  // 加载知识库
+  const loadKnowledgeBases = async () => {
+    setLoadingKBs(true);
+    try {
+      const [myKBResponse, favoriteKBResponse] = await Promise.all([
+        api.listKnowledgeBases(undefined, 1, 50),
+        api.listFavoriteKBs(1, 50)
+      ]);
+      setMyKBs(myKBResponse.items || []);
+      setFavoriteKBs(favoriteKBResponse.items || []);
+    } catch (error) {
+      console.error('Failed to load knowledge bases:', error);
+      toast.error('加载知识库失败');
+    } finally {
+      setLoadingKBs(false);
+    }
+  };
+
+  // 切换知识库选择
+  const toggleKBSelection = (kbId: string) => {
+    setSelectedKBs(prev =>
+      prev.includes(kbId)
+        ? prev.filter(id => id !== kbId)
+        : [...prev, kbId]
+    );
+  };
+
+  // 打开知识库选择器时加载知识库
+  const handleOpenKBSelector = () => {
+    setShowKBSelector(true);
+    if (myKBs.length === 0 && favoriteKBs.length === 0) {
+      loadKnowledgeBases();
+    }
+  };
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // 点击外部关闭知识库选择器
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (kbSelectorRef.current && !kbSelectorRef.current.contains(event.target as Node)) {
+        setShowKBSelector(false);
+      }
+    };
+
+    if (showKBSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showKBSelector]);
 
   // 加载历史会话
   useEffect(() => {
@@ -171,55 +231,132 @@ export default function Home() {
               <div className={`${styles.inputSection} ${styles.centeredInputSection}`}>
                 <div className={styles.inputWrapper}>
                   <div className={styles.inputBox}>
-                    <textarea
-                      className={styles.input}
-                      placeholder="输入您的问题..."
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      disabled={isStreaming}
-                      rows={1}
-                      style={{
-                        height: 'auto',
-                        minHeight: '24px',
-                        maxHeight: '200px'
-                      }}
-                      onInput={(e) => {
-                        const target = e.target as HTMLTextAreaElement;
-                        target.style.height = 'auto';
-                        target.style.height = target.scrollHeight + 'px';
-                      }}
-                    />
-                    <div className={styles.inputActions}>
+                    <div className={styles.inputRow}>
+                      <textarea
+                        className={styles.input}
+                        placeholder="输入您的问题..."
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={isStreaming}
+                        rows={1}
+                        style={{
+                          height: 'auto',
+                          minHeight: '24px',
+                          maxHeight: '200px'
+                        }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = 'auto';
+                          target.style.height = target.scrollHeight + 'px';
+                        }}
+                      />
+                      <div className={styles.inputActions}>
+                        <button
+                          className={`${styles.iconButton} ${styles.sendButton}`}
+                          onClick={handleSend}
+                          disabled={!inputMessage.trim() || isStreaming}
+                          title="发送"
+                        >
+                          <ArrowUp size={22} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className={styles.modeSwitch}>
                       <button
-                        className={`${styles.iconButton} ${styles.sendButton}`}
-                        onClick={handleSend}
-                        disabled={!inputMessage.trim() || isStreaming}
-                        title="发送"
+                        className={`${styles.modeButton} ${!webSearch ? styles.active : ''}`}
+                        disabled={true}
+                        title="深度思考默认启用"
                       >
-                        <Send size={20} />
+                        <Zap size={16} />
+                        <span>深度思考</span>
                       </button>
+                      <button
+                        className={`${styles.modeButton} ${webSearch ? styles.active : ''}`}
+                        onClick={() => setWebSearch(!webSearch)}
+                        disabled={isStreaming}
+                        title="联网搜索"
+                      >
+                        <Search size={16} />
+                        <span>联网搜索</span>
+                      </button>
+                      <div className={styles.kbSelectorWrapper} ref={kbSelectorRef}>
+                        <button
+                          className={`${styles.modeButton} ${selectedKBs.length > 0 ? styles.active : ''}`}
+                          onClick={handleOpenKBSelector}
+                          disabled={isStreaming}
+                          title="选择知识库"
+                        >
+                          <Database size={16} />
+                          <span>知识库{selectedKBs.length > 0 && ` (${selectedKBs.length})`}</span>
+                        </button>
+                        
+                        {showKBSelector && (
+                          <div className={styles.kbSelectorPanel}>
+                            {loadingKBs ? (
+                              <div className={styles.kbSelectorLoading}>加载中...</div>
+                            ) : (
+                              <div className={styles.kbSelectorContent}>
+                                {myKBs.length > 0 && (
+                                  <div className={styles.kbSection}>
+                                    <div className={styles.kbSectionTitle}>我的知识库</div>
+                                    {myKBs.map((kb) => (
+                                      <label key={kb.id} className={styles.kbItem}>
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedKBs.includes(kb.id)}
+                                          onChange={() => toggleKBSelection(kb.id)}
+                                          className={styles.kbCheckbox}
+                                        />
+                                        <div className={styles.kbItemContent}>
+                                          <img src={kb.avatar} alt={kb.name} className={styles.kbAvatar} />
+                                          <span className={styles.kbName}>{kb.name}</span>
+                                        </div>
+                                        {selectedKBs.includes(kb.id) && (
+                                          <Check size={16} className={styles.kbCheckIcon} />
+                                        )}
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {favoriteKBs.length > 0 && (
+                                  <div className={styles.kbSection}>
+                                    <div className={styles.kbSectionTitle}>收藏的知识库</div>
+                                    {favoriteKBs.map((kb) => (
+                                      <label key={kb.id} className={styles.kbItem}>
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedKBs.includes(kb.id)}
+                                          onChange={() => toggleKBSelection(kb.id)}
+                                          className={styles.kbCheckbox}
+                                        />
+                                        <div className={styles.kbItemContent}>
+                                          <img src={kb.avatar} alt={kb.name} className={styles.kbAvatar} />
+                                          <span className={styles.kbName}>{kb.name}</span>
+                                        </div>
+                                        {selectedKBs.includes(kb.id) && (
+                                          <Check size={16} className={styles.kbCheckIcon} />
+                                        )}
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {myKBs.length === 0 && favoriteKBs.length === 0 && !loadingKBs && (
+                                  <div className={styles.kbSelectorEmpty}>暂无可用知识库</div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  <div className={styles.modeSwitch}>
-                    <button
-                      className={`${styles.modeButton} ${!webSearch ? styles.active : ''}`}
-                      disabled={true}
-                      title="深度思考默认启用"
-                    >
-                      <Zap size={18} />
-                      <span>深度思考</span>
-                    </button>
-                    <button
-                      className={`${styles.modeButton} ${webSearch ? styles.active : ''}`}
-                      onClick={() => setWebSearch(!webSearch)}
-                      disabled={isStreaming}
-                      title="联网搜索"
-                    >
-                      <Search size={18} />
-                      <span>联网搜索</span>
-                    </button>
+                  
+                  <div className={styles.disclaimer}>
+                    答案由AI生成，AI也会犯错
                   </div>
                 </div>
               </div>
@@ -280,55 +417,70 @@ export default function Home() {
               <div className={styles.inputSection}>
                 <div className={styles.inputWrapper}>
                   <div className={styles.inputBox}>
-                    <textarea
-                      className={styles.input}
-                      placeholder="继续对话..."
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      disabled={isStreaming}
-                      rows={1}
-                      style={{
-                        height: 'auto',
-                        minHeight: '24px',
-                        maxHeight: '200px'
-                      }}
-                      onInput={(e) => {
-                        const target = e.target as HTMLTextAreaElement;
-                        target.style.height = 'auto';
-                        target.style.height = target.scrollHeight + 'px';
-                      }}
-                    />
-                    <div className={styles.inputActions}>
+                    <div className={styles.inputRow}>
+                      <textarea
+                        className={styles.input}
+                        placeholder="继续对话..."
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={isStreaming}
+                        rows={1}
+                        style={{
+                          height: 'auto',
+                          minHeight: '24px',
+                          maxHeight: '200px'
+                        }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = 'auto';
+                          target.style.height = target.scrollHeight + 'px';
+                        }}
+                      />
+                      <div className={styles.inputActions}>
+                        <button
+                          className={`${styles.iconButton} ${styles.sendButton}`}
+                          onClick={handleSend}
+                          disabled={!inputMessage.trim() || isStreaming}
+                          title="发送"
+                        >
+                          <ArrowUp size={22} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className={styles.modeSwitch}>
                       <button
-                        className={`${styles.iconButton} ${styles.sendButton}`}
-                        onClick={handleSend}
-                        disabled={!inputMessage.trim() || isStreaming}
-                        title="发送"
+                        className={`${styles.modeButton} ${!webSearch ? styles.active : ''}`}
+                        disabled={true}
+                        title="深度思考默认启用"
                       >
-                        <Send size={20} />
+                        <Zap size={16} />
+                        <span>深度思考</span>
+                      </button>
+                      <button
+                        className={`${styles.modeButton} ${webSearch ? styles.active : ''}`}
+                        onClick={() => setWebSearch(!webSearch)}
+                        disabled={isStreaming}
+                        title="联网搜索"
+                      >
+                        <Search size={16} />
+                        <span>联网搜索</span>
+                      </button>
+                      <button
+                        className={`${styles.modeButton} ${selectedKBs.length > 0 ? styles.active : ''}`}
+                        onClick={handleOpenKBSelector}
+                        disabled={isStreaming}
+                        title="选择知识库"
+                      >
+                        <Database size={16} />
+                        <span>知识库{selectedKBs.length > 0 && ` (${selectedKBs.length})`}</span>
                       </button>
                     </div>
                   </div>
-
-                  <div className={styles.modeSwitch}>
-                    <button
-                      className={`${styles.modeButton} ${!webSearch ? styles.active : ''}`}
-                      disabled={true}
-                      title="深度思考默认启用"
-                    >
-                      <Zap size={18} />
-                      <span>深度思考</span>
-                    </button>
-                    <button
-                      className={`${styles.modeButton} ${webSearch ? styles.active : ''}`}
-                      onClick={() => setWebSearch(!webSearch)}
-                      disabled={isStreaming}
-                      title="联网搜索"
-                    >
-                      <Search size={18} />
-                      <span>联网搜索</span>
-                    </button>
+                  
+                  <div className={styles.disclaimer}>
+                    答案由AI生成，AI也会犯错
                   </div>
                 </div>
               </div>

@@ -200,6 +200,7 @@
   flex-shrink: 0;
   padding: 20px 24px 24px;
   background: var(--bg);
+  overflow: visible;
 }
 
 /* 空状态时的输入区：去除底部固定样式 */
@@ -214,20 +215,21 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
 }
 
-/* 模式切换 - 输入框下方左对齐 */
+/* 模式切换 - 输入框内第二行 */
 .modeSwitch {
   display: flex;
   gap: 8px;
 }
 
 .modeButton {
-  padding: 8px 16px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-muted);
-  border-radius: 20px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -235,17 +237,22 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 500;
+  outline: none !important;
+}
+
+.modeButton:focus {
+  outline: none !important;
 }
 
 .modeButton:hover:not(:disabled):not(.active) {
-  background: var(--bg-elev-1);
-  border-color: var(--text-muted);
+  background: var(--bg);
+  color: var(--text);
 }
 
 .modeButton.active {
-  background: rgba(102, 126, 234, 0.12);
+  background: rgba(102, 126, 234, 0.1);
   color: #667eea;
-  border-color: rgba(102, 126, 234, 0.6);
+  border-color: rgba(102, 126, 234, 0.3);
 }
 
 .modeButton:disabled {
@@ -253,37 +260,63 @@
   cursor: not-allowed;
 }
 
+/* AI免责声明 */
+.disclaimer {
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  text-align: center;
+  padding: 0 4px;
+  margin-top: 12px;
+}
+
 /* 输入框 */
 .inputBox {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 10px 16px 14px 16px;
   display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  transition: all 0.2s;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.25s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: visible;
 }
 
 .inputBox:focus-within {
-  border-color: var(--text-muted);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12), 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* 输入框第一行：输入区域 + 发送按钮 */
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .input {
   flex: 1;
-  padding: 12px 16px;
+  padding: 2px 0;
   border: none;
   background: transparent;
   font-size: 15px;
   color: var(--text);
-  outline: none;
+  outline: none !important;
   resize: none;
   min-height: 24px;
   max-height: 200px;
-  line-height: 1.5;
+  line-height: 1.6;
   font-family: inherit;
+  box-shadow: none !important;
+}
+
+.input:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .input::placeholder {
@@ -298,14 +331,13 @@
 
 .inputActions {
   display: flex;
-  padding: 4px;
   flex-shrink: 0;
 }
 
 .iconButton {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   border: none;
   background: transparent;
   color: var(--text-muted);
@@ -313,7 +345,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 
 .iconButton:hover:not(:disabled) {
@@ -322,24 +354,51 @@
 }
 
 .sendButton {
-  background: var(--text);
-  color: var(--bg);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+  outline: none !important;
+}
+
+.sendButton:focus {
+  outline: none !important;
+}
+
+.sendButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.sendButton:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .sendButton:hover:not(:disabled) {
-  background: var(--text);
-  opacity: 0.85;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+  transform: translateY(-2px);
 }
 
 .sendButton:active:not(:disabled) {
   transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
 .sendButton:disabled {
-  opacity: 0.3;
+  opacity: 0.4;
   cursor: not-allowed;
-  transform: scale(1);
+  transform: none;
+  box-shadow: none;
+}
+
+.sendButton svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 /* ============================================
@@ -662,5 +721,173 @@
 
 .messagesArea::-webkit-scrollbar-thumb:hover,
 .welcomeContent::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* 知识库选择器 */
+.kbSelectorWrapper {
+  position: relative;
+}
+
+.kbSelectorPanel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 320px;
+  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+  animation: kbPanelSlideIn 0.2s ease-out;
+}
+
+html.dark .kbSelectorPanel {
+  background: #1f2937;
+}
+
+@keyframes kbPanelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kbSelectorContent {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 12px;
+  background: #ffffff;
+}
+
+html.dark .kbSelectorContent {
+  background: #1f2937;
+}
+
+.kbSelectorLoading {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  background: #ffffff;
+}
+
+html.dark .kbSelectorLoading {
+  background: #1f2937;
+}
+
+.kbSelectorEmpty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  background: #ffffff;
+}
+
+html.dark .kbSelectorEmpty {
+  background: #1f2937;
+}
+
+.kbSection {
+  margin-bottom: 16px;
+}
+
+.kbSection:last-child {
+  margin-bottom: 0;
+}
+
+.kbSection:first-child {
+  margin-top: 0;
+}
+
+.kbSectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 4px 8px 4px;
+  margin-bottom: 4px;
+}
+
+.kbItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  margin-bottom: 2px;
+}
+
+.kbItem:hover {
+  background: rgba(99, 102, 241, 0.05);
+  transform: translateX(2px);
+}
+
+html.dark .kbItem:hover {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.kbCheckbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kbItemContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.kbAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.kbName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.kbCheckIcon {
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.kbSelectorContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kbSelectorContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kbSelectorContent::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.kbSelectorContent::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }

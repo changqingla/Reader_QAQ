@@ -848,7 +848,7 @@ export default function KnowledgeDetail() {
                   </div>
 
                   <div className={styles.chatFooter}>
-                    结果由 AI 大模型生成，请谨慎使用。
+                  答案由AI生成，AI也会犯错。
                   </div>
                 </div>
               </div>

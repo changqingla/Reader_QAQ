@@ -71,18 +71,23 @@ export default function Favorites() {
   };
 
   const handleUnfavoriteKB = async (kbId: string) => {
+    console.log('handleUnfavoriteKB called with kbId:', kbId);
     try {
       await favoriteAPI.unfavoriteKB(kbId);
+      console.log('unfavoriteKB API call successful');
       toast.success('已取消收藏');
       loadFavorites();
     } catch (error: any) {
+      console.error('unfavoriteKB error:', error);
       toast.error(error.message || '操作失败');
     }
   };
 
   const handleUnfavoriteDoc = async (docId: string) => {
+    console.log('handleUnfavoriteDoc called with docId:', docId);
     try {
       await favoriteAPI.unfavoriteDocument(docId);
+      console.log('unfavoriteDocument API call successful');
       toast.success('已取消收藏');
       // 如果当前正在预览这个文档，关闭预览
       if (previewDoc?.id === docId) {
@@ -90,6 +95,7 @@ export default function Favorites() {
       }
       loadFavorites();
     } catch (error: any) {
+      console.error('unfavoriteDocument error:', error);
       toast.error(error.message || '操作失败');
     }
   };
@@ -265,21 +271,27 @@ export default function Favorites() {
                 )}
               </div>
               <div className={styles.chatInputArea}>
-                <input
-                  type="text"
-                  placeholder="输入你的问题..."
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className={styles.chatInput}
-                />
-                <button 
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim()}
-                  className={styles.sendBtn}
-                >
-                  <Send size={18} />
-                </button>
+                <div className={styles.chatInputWrap}>
+                  <input
+                    type="text"
+                    placeholder="输入你的问题..."
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !isStreaming && inputMessage.trim() && handleSendMessage()}
+                    className={styles.chatInput}
+                    disabled={isStreaming}
+                  />
+                  <button 
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isStreaming}
+                    className={styles.sendBtn}
+                  >
+                    <Send size={18} />
+                  </button>
+                </div>
+                <div className={styles.chatFooter}>
+                  答案由AI生成，AI也会犯错。
+                </div>
               </div>
             </div>
           </div>
@@ -357,8 +369,13 @@ export default function Favorites() {
                             <button
                               className={styles.btnUnfavorite}
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 handleUnfavoriteKB(kb.id);
+                              }}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                               }}
                               title="取消收藏"
                             >
@@ -381,26 +398,35 @@ export default function Favorites() {
                         <div 
                           key={doc.id} 
                           className={`${styles.docItem} ${previewDoc?.id === doc.id ? styles.docItemActive : ''}`}
-                          onClick={() => handlePreviewDocument(doc)}
                         >
-                          <FileText size={20} className={styles.docIcon} />
-                          <div className={styles.docInfo}>
-                            <div className={styles.docName}>{doc.name}</div>
-                            <div className={styles.docKb}>
-                              <Database size={12} />
-                              {doc.kbName}
+                          <div 
+                            className={styles.docClickArea}
+                            onClick={() => handlePreviewDocument(doc)}
+                          >
+                            <FileText size={20} className={styles.docIcon} />
+                            <div className={styles.docInfo}>
+                              <div className={styles.docName}>{doc.name}</div>
+                              <div className={styles.docKb}>
+                                <Database size={12} />
+                                {doc.kbName}
+                              </div>
                             </div>
                           </div>
-                          <Star size={16} fill="#f59e0b" color="#f59e0b" className={styles.docFavoriteIcon} />
                           <button
-                            className={styles.btnUnfavorite}
+                            className={styles.btnFavorite}
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
+                              console.log('Star clicked! Unfavoriting docId:', doc.id);
                               handleUnfavoriteDoc(doc.id);
+                            }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                             }}
                             title="取消收藏"
                           >
-                            <Trash2 size={14} />
+                            <Star size={18} fill="#f59e0b" color="#f59e0b" />
                           </button>
                         </div>
                       ))}

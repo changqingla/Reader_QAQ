@@ -36,7 +36,24 @@ async function request<T>(
     
     // 根据错误码提供更友好的提示
     if (error.code === 'UNAUTHORIZED') {
-      throw new Error(errorMessage || '账号或密码不正确');
+      // 检查是否是token过期（已登录状态下的401错误）
+      const isTokenExpired = token && errorMessage.toLowerCase().includes('token');
+      
+      if (isTokenExpired) {
+        // Token过期，清除本地存储并跳转登录页
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('userProfile');
+        
+        // 延迟跳转，先让错误提示显示
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 1500);
+        
+        throw new Error('当前登录已过期，请重新登录');
+      } else {
+        // 登录时的认证错误
+        throw new Error(errorMessage || '账号或密码不正确');
+      }
     } else if (error.code === 'NOT_FOUND') {
       throw new Error(errorMessage || '账号未注册');
     } else if (error.code === 'CONFLICT') {

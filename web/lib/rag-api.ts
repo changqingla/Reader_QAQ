@@ -40,6 +40,15 @@ class RAGAPIClient {
       });
 
       if (!response.ok) {
+        // 处理401 Unauthorized错误（Token过期）
+        if (response.status === 401) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('userProfile');
+          setTimeout(() => {
+            window.location.href = '/auth';
+          }, 1500);
+          throw new Error('当前登录已过期，请重新登录');
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -113,6 +122,15 @@ class RAGAPIClient {
     });
 
     if (!response.ok) {
+      // 处理401 Unauthorized错误（Token过期）
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('userProfile');
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 1500);
+        throw new Error('当前登录已过期，请重新登录');
+      }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 

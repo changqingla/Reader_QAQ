@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Authentication
     SECRET_KEY: str = "your-secret-key-change-in-production-please-use-random-string"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
     # Upload Limits

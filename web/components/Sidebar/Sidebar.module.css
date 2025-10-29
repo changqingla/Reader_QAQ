@@ -115,6 +115,17 @@ html.dark .newChatButton {
   flex: 1;
   overflow-y: auto;
   margin-bottom: 20px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.chatList:hover {
+  scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
 }
 
 .sectionTitle {
@@ -402,20 +413,32 @@ html.dark .newChatButton {
 
 /* Scrollbar Styling */
 .chatList::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .chatList::-webkit-scrollbar-track {
   background: transparent;
+  border: none;
+  margin: 4px 0;
 }
 
 .chatList::-webkit-scrollbar-thumb {
-  background: #404040;
-  border-radius: 2px;
+  background: transparent;
+  border-radius: 3px;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.chatList:hover::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
 }
 
 .chatList::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+  background: rgba(128, 128, 128, 0.5);
+}
+
+.chatList::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Responsive Design */

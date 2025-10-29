@@ -657,22 +657,31 @@
   padding: 12px 16px;
   width: 100%;
   transition: all 0.3s ease;
+  outline: none;
 }
 
 .chatInputWrap:focus-within {
-  border-color: #6366f1;
+  border-color: rgba(99, 102, 241, 0.5);
   background: var(--bg-elev-1);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+  outline: none;
 }
 
 .chatInput {
   flex: 1;
   border: none;
-  outline: none;
+  outline: none !important;
   background: transparent;
   color: var(--text);
   font-size: 14px;
   padding: 4px 0;
+  box-shadow: none !important;
+}
+
+.chatInput:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .chatInput::placeholder {
